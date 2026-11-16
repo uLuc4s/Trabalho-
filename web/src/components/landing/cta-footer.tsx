@@ -1,9 +1,11 @@
-import Image from "next/image";
-import Link from "next/link";
-import { Reveal } from "@/components/motion/reveal";
-import { Magnetic } from "@/components/motion/interactive";
-import { Copyright } from "./copyright";
+// Chamada final e rodapé da landing: convite para criar conta, links de navegação, entrar e ano.
+import Image from "next/image"; // logo do rodapé
+import Link from "next/link"; // navegação interna
+import { Reveal } from "@/components/motion/reveal"; // entrada animada
+import { Magnetic } from "@/components/motion/interactive"; // botão que segue o cursor
+import { Copyright } from "./copyright"; // ano do direito autoral
 
+// Links de seção repetidos no rodapé.
 const footerLinks = [
   { label: "Recursos", href: "#recursos" },
   { label: "Como funciona", href: "#como-funciona" },
@@ -11,9 +13,11 @@ const footerLinks = [
   { label: "Perguntas", href: "#perguntas" },
 ];
 
+// Monta a chamada e o rodapé. Não recebe nada.
 export function CtaFooter() {
   return (
     <>
+      {/* Chamada final com o botão de criar conta. */}
       <section className="border-t border-border px-6 py-24 md:px-12 lg:px-20">
         <Reveal className="mx-auto flex max-w-6xl flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <h2 className="max-w-lg font-display text-4xl leading-tight tracking-tight md:text-5xl">
@@ -30,6 +34,7 @@ export function CtaFooter() {
         </Reveal>
       </section>
 
+      {/* Rodapé: logo, links, entrar e direito autoral. */}
       <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <Link href="/" className="flex items-center">

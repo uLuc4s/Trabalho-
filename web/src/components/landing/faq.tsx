@@ -1,7 +1,9 @@
-import { ChevronDown } from "lucide-react";
-import { Reveal } from "@/components/motion/reveal";
-import { SectionHeading } from "./section-heading";
+// Perguntas frequentes da landing, em sanfona. Cada pergunta abre e fecha com <details>, sem JavaScript.
+import { ChevronDown } from "lucide-react"; // seta que gira ao abrir
+import { Reveal } from "@/components/motion/reveal"; // entrada animada
+import { SectionHeading } from "./section-heading"; // cabeçalho da seção
 
+// Perguntas e respostas.
 const questions = [
   {
     q: "O cliente precisa criar conta?",
@@ -21,6 +23,7 @@ const questions = [
   },
 ];
 
+// Monta a seção. Não recebe nada.
 export function Faq() {
   return (
     <section id="perguntas" className="border-t border-border px-6 py-28 md:px-12 lg:px-20">
@@ -34,6 +37,7 @@ export function Faq() {
         <div className="divide-y divide-border border-y border-border">
           {questions.map((item, index) => (
             <Reveal key={item.q} delay={index * 0.05}>
+              {/* details/summary: abre e fecha nativamente. A seta gira com o estado "open" (group-open). */}
               <details className="group py-6">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-body text-base font-medium text-foreground">
                   {item.q}

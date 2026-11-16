@@ -1,8 +1,11 @@
-import { Hammer, Scissors, Stethoscope, Wrench } from "lucide-react";
-import { StaggerGroup, StaggerItem } from "@/components/motion/reveal";
-import { Spotlight } from "@/components/motion/interactive";
-import { SectionHeading } from "./section-heading";
+// Seção de segmentos: os tipos de negócio atendidos, em uma grade de quatro cartões.
+// Cada cartão entra em sequência e tem o brilho que segue o cursor.
+import { Hammer, Scissors, Stethoscope, Wrench } from "lucide-react"; // ícones de cada segmento
+import { StaggerGroup, StaggerItem } from "@/components/motion/reveal"; // entrada em sequência
+import { Spotlight } from "@/components/motion/interactive"; // brilho que segue o cursor
+import { SectionHeading } from "./section-heading"; // cabeçalho da seção
 
+// Segmentos apresentados na landing. Não são os mesmos da escolha do onboarding (que tem mais opções).
 const segments = [
   {
     icon: Scissors,
@@ -26,6 +29,7 @@ const segments = [
   },
 ];
 
+// Monta a seção. Não recebe nada.
 export function Segments() {
   return (
     <section id="segmentos" className="px-6 py-28 md:px-12 lg:px-20">
@@ -36,6 +40,7 @@ export function Segments() {
           description="Cada empresa configura os próprios serviços e a forma de atender."
         />
 
+        {/* Grade de cartões. O fundo cinza da grade vira a linha entre eles (gap-px). */}
         <StaggerGroup className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2">
           {segments.map((segment) => (
             <StaggerItem key={segment.name} className="bg-background">

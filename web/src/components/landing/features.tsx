@@ -1,3 +1,6 @@
+// Seção de recursos da landing: lista de benefícios com ícone, título e texto.
+// Os itens entram em sequência ao rolar, e cada um tem o brilho que acompanha o cursor.
+// ATENÇÃO: alguns itens descrevem recursos que ainda não estão prontos (Google Agenda e e-mail de confirmação).
 import {
   BellRing,
   CalendarClock,
@@ -6,11 +9,12 @@ import {
   Link2,
   RefreshCw,
   Users,
-} from "lucide-react";
-import { StaggerGroup, StaggerItem } from "@/components/motion/reveal";
-import { Spotlight } from "@/components/motion/interactive";
-import { SectionHeading } from "./section-heading";
+} from "lucide-react"; // ícones de cada recurso
+import { StaggerGroup, StaggerItem } from "@/components/motion/reveal"; // entrada em sequência
+import { Spotlight } from "@/components/motion/interactive"; // brilho que segue o cursor
+import { SectionHeading } from "./section-heading"; // cabeçalho da seção
 
+// Lista de recursos apresentados ao visitante.
 const features = [
   {
     icon: CalendarClock,
@@ -30,6 +34,7 @@ const features = [
   {
     icon: RefreshCw,
     title: "Google Agenda",
+    // PENDENTE: a integração com o Google Agenda ainda não foi construída.
     text: "Cada pessoa conecta a própria conta e o atendimento aparece na agenda dela.",
   },
   {
@@ -45,14 +50,17 @@ const features = [
   {
     icon: BellRing,
     title: "Confirmação por e-mail",
+    // PENDENTE: o envio de e-mail depende de um provedor ainda não contratado.
     text: "O cliente recebe o horário confirmado e um arquivo para salvar na agenda.",
   },
 ];
 
+// Monta a seção. Não recebe nada.
 export function Features() {
   return (
     <section id="recursos" className="px-6 py-28 md:px-12 lg:px-20">
       <div className="mx-auto grid max-w-6xl gap-16 lg:grid-cols-[1fr_1.4fr] lg:gap-24">
+        {/* Título fixo ao rolar, no computador. */}
         <div className="lg:sticky lg:top-24 lg:self-start">
           <SectionHeading
             eyebrow="Recursos"
@@ -61,6 +69,7 @@ export function Features() {
           />
         </div>
 
+        {/* Lista de recursos, com um fio separador entre cada um. */}
         <StaggerGroup className="divide-y divide-border border-y border-border">
           {features.map((feature) => (
             <StaggerItem key={feature.title}>

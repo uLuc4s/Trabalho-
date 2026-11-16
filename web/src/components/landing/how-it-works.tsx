@@ -1,6 +1,9 @@
-import { SectionHeading } from "./section-heading";
-import { Reveal } from "@/components/motion/reveal";
+// Seção "como funciona": três passos numerados em uma linha do tempo vertical.
+// Cada passo aparece em sequência ao rolar.
+import { SectionHeading } from "./section-heading"; // cabeçalho da seção
+import { Reveal } from "@/components/motion/reveal"; // entrada animada
 
+// Os três passos, na ordem em que o cliente da empresa percorre.
 const steps = [
   {
     title: "Cadastre a empresa",
@@ -16,6 +19,7 @@ const steps = [
   },
 ];
 
+// Monta a seção. Não recebe nada.
 export function HowItWorks() {
   return (
     <section id="como-funciona" className="border-y border-border bg-secondary/30 px-6 py-28 md:px-12 lg:px-20">
@@ -26,10 +30,12 @@ export function HowItWorks() {
           description="Não tem instalação nem treinamento. Dá para começar no mesmo dia."
         />
 
+        {/* Linha do tempo: a borda da esquerda é o fio, e cada passo tem um ponto sobre ele. */}
         <ol className="relative flex flex-col gap-10 border-l border-border pl-8">
           {steps.map((step, index) => (
             <Reveal key={step.title} delay={index * 0.08} className="relative">
               <li className="list-none">
+                {/* Ponto sobre o fio. */}
                 <span className="absolute -left-[41px] top-0 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-1 ring-border">
                   <span className="h-2 w-2 rounded-full bg-accent" />
                 </span>

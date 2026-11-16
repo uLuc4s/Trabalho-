@@ -1,3 +1,6 @@
+// Prévia estática do painel, usada no destaque da landing e na demonstração em tela cheia.
+// Todos os dados são de exemplo: nenhum número vem do banco.
+// pointer-events-none e select-none: a prévia não responde a clique nem seleção.
 import {
   Bell,
   BarChart3,
@@ -17,8 +20,9 @@ import {
   CalendarPlus,
   Ban,
   ClipboardList,
-} from "lucide-react";
+} from "lucide-react"; // ícones da prévia
 
+// Itens do menu lateral de exemplo. "active" marca a página atual; "badge" é o contador.
 const sidebar = [
   { label: "Início", icon: Home, active: true },
   { label: "Agenda", icon: Calendar },
@@ -28,12 +32,14 @@ const sidebar = [
   { label: "Relatórios", icon: BarChart3 },
 ];
 
+// Itens de operação do menu lateral.
 const workflows = [
   { label: "Tarefas", icon: ListTodo },
   { label: "Notificações", icon: Bell },
   { label: "Configurações", icon: Settings },
 ];
 
+// Botões de ação de exemplo. Só o primeiro é o destaque.
 const actions = [
   { label: "Novo agendamento", icon: CalendarPlus, primary: true },
   { label: "Solicitação", icon: Send },
@@ -42,12 +48,14 @@ const actions = [
   { label: "Link público", icon: Link2 },
 ];
 
+// Equipe de exemplo com faturamento e quantidade de atendimentos.
 const team = [
   { name: "Carlos", value: "R$ 3.240,00", detail: "12 atendimentos" },
   { name: "Lucas", value: "R$ 2.180,50", detail: "8 atendimentos" },
   { name: "João Flausino", value: "R$ 1.590,00", detail: "6 atendimentos" },
 ];
 
+// Próximos atendimentos de exemplo, com a cor do status.
 const recent = [
   { client: "Maria Silva", service: "Corte e barba", time: "09:00", status: "Confirmado", tone: "text-emerald-600" },
   { client: "Lucas Almeida", service: "Visita técnica", time: "10:30", status: "Pendente", tone: "text-amber-600" },
@@ -55,20 +63,23 @@ const recent = [
   { client: "Pedro Costa", service: "Manutenção", time: "15:30", status: "Concluído", tone: "text-emerald-600" },
 ];
 
+// Traçado da linha do gráfico de faturamento (curva em SVG).
 const chartPath =
   "M0 58 C 40 52, 60 28, 100 36 S 170 60, 210 40 S 280 12, 320 22 S 380 38, 400 16";
 
+// Monta a prévia. Não recebe nada.
 export function DashboardPreview() {
   return (
     <div
       className="w-full max-w-5xl overflow-hidden rounded-2xl p-3 md:p-4"
       style={{
-        background: "rgba(255, 255, 255, 0.4)",
+        background: "rgba(255, 255, 255, 0.4)", // vidro claro
         border: "1px solid rgba(255, 255, 255, 0.5)",
         boxShadow: "var(--shadow-dashboard)",
       }}
     >
       <div className="pointer-events-none flex select-none flex-col rounded-xl bg-background text-[11px] text-foreground">
+        {/* Barra superior: logo, busca e avisos. A busca some em telas pequenas. */}
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent text-accent-foreground">
@@ -93,6 +104,7 @@ export function DashboardPreview() {
         </div>
 
         <div className="flex min-h-[340px]">
+          {/* Menu lateral: aparece só em telas médias ou maiores. */}
           <aside className="hidden w-40 shrink-0 flex-col gap-0.5 border-r border-border p-2.5 md:flex">
             {sidebar.map((item) => (
               <div
@@ -118,6 +130,7 @@ export function DashboardPreview() {
           </aside>
 
           <main className="flex min-w-0 flex-1 flex-col gap-3 bg-secondary/30 p-3 md:p-4">
+            {/* Saudação e botões de ação. */}
             <div className="flex flex-wrap items-center gap-2">
               <p className="mr-auto text-sm font-semibold">Olá, Lucas</p>
               {actions.map((action) => (
@@ -136,6 +149,7 @@ export function DashboardPreview() {
             </div>
 
             <div className="flex flex-col gap-3 md:flex-row">
+              {/* Cartão de faturamento com a linha em SVG. */}
               <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-xl border border-border bg-background p-4 md:basis-0">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">Faturamento do mês</span>
@@ -152,16 +166,19 @@ export function DashboardPreview() {
                 </div>
                 <svg viewBox="0 0 400 80" className="h-20 w-full" preserveAspectRatio="none" aria-hidden>
                   <defs>
+                    {/* Degradê que preenche a área sob a linha. */}
                     <linearGradient id="chart-fill" x1="0" x2="0" y1="0" y2="1">
                       <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity="0.15" />
                       <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity="0" />
                     </linearGradient>
                   </defs>
+                  {/* Área preenchida e, por cima, a linha. */}
                   <path d={`${chartPath} L400 80 L0 80 Z`} fill="url(#chart-fill)" />
                   <path d={chartPath} fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" />
                 </svg>
               </div>
 
+              {/* Cartão da equipe com faturamento por pessoa. */}
               <div className="flex min-w-0 flex-1 flex-col rounded-xl border border-border bg-background p-4 md:basis-0">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-xs font-medium">Equipe</span>
@@ -189,6 +206,7 @@ export function DashboardPreview() {
               </div>
             </div>
 
+            {/* Tabela de próximos atendimentos. Em telas pequenas, esconde a coluna de serviço. */}
             <div className="flex-1 rounded-xl border border-border bg-background p-4">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium">Próximos atendimentos</span>
