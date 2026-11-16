@@ -2,7 +2,7 @@
 // Funções puras, sem acesso a banco.
 
 import type { ReportRowDTO, ReportSummaryDTO } from "@/dto/relatorios.dto";
-import { first } from "@/mappers/agenda.mapper";
+import { first } from "./agenda.mapper.ts"; // import relativo: o runner de testes do Node não lê o alias @/
 
 // Tradução das formas de pagamento para o texto da tela.
 export const PAYMENT_LABEL: Record<string, string> = { pix: "Pix", cartao: "Cartão", dinheiro: "Dinheiro" };
