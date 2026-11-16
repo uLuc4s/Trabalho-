@@ -1,12 +1,15 @@
-import Image from "next/image";
-import Link from "next/link";
-import { BackToTop } from "@/components/motion/back-to-top";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { ScrollHeader } from "@/components/motion/page-chrome";
-import { Magnetic } from "@/components/motion/interactive";
-import { MobileMenu } from "./mobile-menu";
+// Cabeçalho fixo da landing: logo que leva ao topo, links das seções, "Entrar", "Criar conta" e menu do celular.
+// Os links usam âncoras (#recursos etc.) para rolar até cada seção.
+import Image from "next/image"; // logo
+import Link from "next/link"; // navegação interna
+import { BackToTop } from "@/components/motion/back-to-top"; // logo que rola suavemente até o topo
+import { buttonVariants } from "@/components/ui/button"; // classes do botão, para aplicar em um link
+import { cn } from "@/lib/utils"; // junta classes CSS
+import { ScrollHeader } from "@/components/motion/page-chrome"; // cabeçalho que ganha fundo ao rolar
+import { Magnetic } from "@/components/motion/interactive"; // botão que segue levemente o cursor
+import { MobileMenu } from "./mobile-menu"; // menu do celular
 
+// Links de navegação interna da landing. Cada href aponta para o id de uma seção.
 const links = [
   { label: "Recursos", href: "#recursos" },
   { label: "Como funciona", href: "#como-funciona" },
@@ -14,14 +17,17 @@ const links = [
   { label: "Perguntas", href: "#perguntas" },
 ];
 
+// Cabeçalho completo. Não recebe nada.
 export function Navbar() {
   return (
     <ScrollHeader>
       <div className="flex items-center justify-between px-6 py-5 font-body md:px-12 lg:px-20">
+      {/* Logo: clique rola para o topo, com animação. */}
       <BackToTop>
         <Image src="/brand/agendfix-principal.svg" alt="" width={180} height={40} priority unoptimized />
       </BackToTop>
 
+      {/* Links de seção: só aparecem em telas médias ou maiores. No celular, ficam no menu. */}
       <nav aria-label="Principal" className="hidden items-center gap-8 md:flex">
         {links.map((link) => (
           <a
@@ -35,6 +41,7 @@ export function Navbar() {
       </nav>
 
       <div className="flex items-center gap-3">
+        {/* "Entrar" some no celular muito pequeno (só aparece a partir de sm). */}
         <Link
           href="/login"
           className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-block"

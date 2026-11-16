@@ -1,9 +1,12 @@
+// Menu do celular da landing: botão com ícone que gira ao abrir, e uma lista de links de seção que desce.
+// Só aparece em telas pequenas (md:hidden). Roda no navegador porque abre e fecha.
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { useState } from "react"; // estado de aberto ou fechado
+import { AnimatePresence, motion } from "framer-motion"; // animações de abrir, fechar e trocar ícone
+import { Menu, X } from "lucide-react"; // ícones de abrir e fechar
 
+// Links de seção, iguais aos do menu do computador.
 const links = [
   { label: "Recursos", href: "#recursos" },
   { label: "Como funciona", href: "#como-funciona" },
@@ -11,22 +14,24 @@ const links = [
   { label: "Perguntas", href: "#perguntas" },
 ];
 
+// Botão de menu e lista de links. Não recebe nada.
 export function MobileMenu() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false); // true quando a lista está aberta
 
   return (
     <div className="md:hidden">
+      {/* Botão que alterna entre o ícone de menu e o de fechar, com giro. */}
       <motion.button
         type="button"
         aria-label={open ? "Fechar menu" : "Abrir menu"}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        whileTap={{ scale: 0.92 }}
+        whileTap={{ scale: 0.92 }} // leve encolhimento ao tocar
         className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background"
       >
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
-            key={open ? "close" : "open"}
+            key={open ? "close" : "open"} // a chave muda o ícone e dispara a animação
             initial={{ opacity: 0, rotate: -90 }}
             animate={{ opacity: 1, rotate: 0 }}
             exit={{ opacity: 0, rotate: 90 }}
@@ -38,6 +43,7 @@ export function MobileMenu() {
         </AnimatePresence>
       </motion.button>
 
+      {/* Lista de links que desce abaixo do cabeçalho. Cada link entra com um pequeno atraso. */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -51,7 +57,7 @@ export function MobileMenu() {
               <motion.a
                 key={link.label}
                 href={link.href}
-                onClick={() => setOpen(false)}
+                onClick={() => setOpen(false)} // fecha o menu ao escolher uma seção
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.04 * index, duration: 0.3 }}

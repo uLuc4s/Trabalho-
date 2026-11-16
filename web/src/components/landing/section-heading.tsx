@@ -1,5 +1,9 @@
-import { Reveal } from "@/components/motion/reveal";
+// Cabeçalho padrão das seções da landing: pequeno rótulo, título grande e um parágrafo.
+// Entra com a animação de aparecer ao rolar.
+import { Reveal } from "@/components/motion/reveal"; // entrada animada
 
+// Entrada: rótulo pequeno (eyebrow), título e descrição.
+// Saída: bloco de cabeçalho da seção.
 export function SectionHeading({
   eyebrow,
   title,
