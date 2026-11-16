@@ -60,7 +60,7 @@ export function KanbanBoard({
         setError("Não foi possível criar o quadro.");
         return;
       }
-      await supabase.from("task_columns").insert(
+      const { error: columnsError } = await supabase.from("task_columns").insert(
         ["A fazer", "Em andamento", "Concluído"].map((name, position) => ({
           company_id: companyId,
           board_id: board.id,
@@ -68,6 +68,10 @@ export function KanbanBoard({
           position,
         })),
       );
+      if (columnsError) {
+        setError("Quadro criado, mas as colunas falharam. Recarregue a página.");
+        return;
+      }
       router.refresh();
     });
   }

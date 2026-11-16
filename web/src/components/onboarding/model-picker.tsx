@@ -42,7 +42,10 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
         const model = BUSINESS_MODELS.find((m) => m.id === selected);
         const examples = segmentServices.length > 0 ? segmentServices : (model?.services ?? []);
         if (examples.length > 0) {
-          await supabase.from("services").insert(examples.map((s) => ({ ...s, company_id: companyId })));
+          const { error: servicesError } = await supabase.from("services").insert(examples.map((s) => ({ ...s, company_id: companyId })));
+          if (servicesError) {
+            setError("Empresa configurada, mas os serviços de exemplo não foram criados. Cadastre-os em Serviços.");
+          }
         }
       }
 

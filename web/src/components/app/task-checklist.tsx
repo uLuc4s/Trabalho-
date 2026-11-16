@@ -20,11 +20,13 @@ export function TaskChecklist({
   const router = useRouter();
   const [draft, setDraft] = useState("");
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const done = items.filter((i) => i.done).length;
 
   function toggle(item: ChecklistItem) {
     startTransition(async () => {
-      await createClient().from("task_checklist_items").update({ done: !item.done }).eq("id", item.id);
+      const { error: updateError } = await createClient().from("task_checklist_items").update({ done: !item.done }).eq("id", item.id);
+      if (updateError) return setError("Não foi possível atualizar o item.");
       router.refresh();
     });
   }
@@ -34,12 +36,13 @@ export function TaskChecklist({
     if (title.length < 2) return;
     setDraft("");
     startTransition(async () => {
-      await createClient().from("task_checklist_items").insert({
+      const { error: insertError } = await createClient().from("task_checklist_items").insert({
         company_id: companyId,
         task_id: taskId,
         title,
         position: items.length,
       });
+      if (insertError) return setError("Não foi possível adicionar o item.");
       router.refresh();
     });
   }
@@ -51,6 +54,7 @@ export function TaskChecklist({
           {done} de {items.length} concluídos
         </p>
       )}
+      {error && <p className="text-xs text-destructive">{error}</p>}
       <ul className="flex flex-col gap-1.5">
         {items.map((item) => (
           <li key={item.id}>
