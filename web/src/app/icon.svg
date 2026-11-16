@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="64" height="64" role="img" aria-label="agendfix">
+  <title>agendfix</title>
+  
+  <g transform="translate(0 0) scale(1)">
+    <defs>
+      <linearGradient id="g-sym" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#6366F1"/>
+        <stop offset="1" stop-color="#3730A3"/>
+      </linearGradient>
+    </defs>
+    <rect width="120" height="120" rx="30" fill="url(#g-sym)"/>
+    <path d="M32 90 L60 32 L88 90" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M45 70 L75 70" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="96" cy="30" r="8" fill="#C7D2FE"/>
+  </g>
+</svg>
