@@ -1,27 +1,33 @@
+// Formulário de cadastro: nome, e-mail e senha. Se o Supabase exigir confirmação de e-mail, mostra a tela "confira o e-mail".
+// Roda no navegador porque tem estado, envio e chamada ao Supabase.
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { AlertCircle, Loader2, Lock, Mail, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link"; // navegação interna
+import { useRouter } from "next/navigation"; // navegação programática
+import { useState } from "react"; // estado dos campos e da tela
+import { AlertCircle, Loader2, Lock, Mail, User } from "lucide-react"; // ícones
+import { Button } from "@/components/ui/button"; // botão padrão
+import { Input } from "@/components/ui/input"; // campo padrão
+import { Label } from "@/components/ui/label"; // rótulo padrão
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Entrada: nada além do estado da tela.
+// Saída: formulário de cadastro, ou a tela de confirmação de e-mail depois de enviar.
 export function SignupForm() {
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [checkEmail, setCheckEmail] = useState(false);
+  const [fullName, setFullName] = useState(""); // nome do usuário
+  const [email, setEmail] = useState(""); // e-mail
+  const [password, setPassword] = useState(""); // senha
+  const [error, setError] = useState<string | null>(null); // mensagem de erro
+  const [loading, setLoading] = useState(false); // true enquanto envia
+  const [checkEmail, setCheckEmail] = useState(false); // true quando falta confirmar o e-mail
 
+  // Envia o cadastro ao Supabase.
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
+    // Regra da senha: pelo menos 8 caracteres. Checa antes de chamar o servidor.
     if (password.length < 8) {
       setError("A senha precisa ter pelo menos 8 caracteres.");
       return;
@@ -33,11 +39,12 @@ export function SignupForm() {
       email: email.trim().toLowerCase(),
       password,
       options: {
-        data: { full_name: fullName.trim() },
-        emailRedirectTo: `${window.location.origin}/onboarding`,
+        data: { full_name: fullName.trim() }, // nome guardado no cadastro; o gatilho cria o perfil com ele
+        emailRedirectTo: `${window.location.origin}/onboarding`, // link do e-mail leva para o onboarding
       },
     });
 
+    // Traduz o erro do Supabase para uma frase clara. Qualquer outro erro vira mensagem genérica.
     if (authError) {
       setError(
         authError.message.includes("already registered")
@@ -48,16 +55,19 @@ export function SignupForm() {
       return;
     }
 
+    // Se já veio sessão, o e-mail não precisa de confirmação: vai direto ao onboarding.
     if (data.session) {
       router.push("/onboarding");
       router.refresh();
       return;
     }
 
+    // Sem sessão: o Supabase enviou um e-mail de confirmação.
     setCheckEmail(true);
     setLoading(false);
   }
 
+  // Tela de espera: pede para abrir o link do e-mail.
   if (checkEmail) {
     return (
       <div className="flex flex-col gap-4">
@@ -74,6 +84,7 @@ export function SignupForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {/* Nome do responsável. */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="full-name">Seu nome</Label>
         <div className="relative">
@@ -89,6 +100,7 @@ export function SignupForm() {
         </div>
       </div>
 
+      {/* E-mail, que vira o login. */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">E-mail</Label>
         <div className="relative">
@@ -105,6 +117,7 @@ export function SignupForm() {
         </div>
       </div>
 
+      {/* Senha: mínimo de 8 caracteres, reforçado também pelo atributo minLength. */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="password">Senha</Label>
         <div className="relative">
