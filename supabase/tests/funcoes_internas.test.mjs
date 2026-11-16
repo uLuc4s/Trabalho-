@@ -17,6 +17,7 @@ const MIGRATIONS = [
   "../migrations/20261116000400_membro_ve_propria_linha.sql",
   "../migrations/20261116000500_funcoes_internas.sql",
   "../migrations/20261116001400_remarcacao_sem_conflito_consigo.sql",
+  "../migrations/20261116001600_fecha_escrita_direta.sql",
 ].map((p) => readFileSync(new URL(p, import.meta.url), "utf8"));
 
 const db = new PGlite({ extensions: { btree_gist } }); // banco de teste novo

@@ -12,6 +12,7 @@ const MIGRATIONS = [
   "../migrations/20261116000000_fundacao.sql",
   "../migrations/20261116000100_revoga_anon.sql",
   "../migrations/20261116000200_operacoes.sql",
+  "../migrations/20261116001600_fecha_escrita_direta.sql",
 ].map((p) => readFileSync(new URL(p, import.meta.url), "utf8"));
 
 const db = new PGlite({ extensions: { btree_gist } }); // banco de teste novo
@@ -102,8 +103,11 @@ const WO = wo.rows[0].id;
 // --- Histórico da ordem ---
 // O evento é gravado com o próprio usuário como autor.
 const ev = await as("member1", "insert into public.work_order_events (company_id, work_order_id, actor_id, event_type) values ($1,$2,$3,'created')", [COMP1, WO, USERS.member1]);
-check("evento de histórico é registrado pelo próprio ator", !ev.error, ev.error?.message);
+check("inserção direta no histórico é recusada (só pela função)", ev.error !== null, ev.error?.message ?? "aceito (falha)");
 
+// Status da ordem só muda pela função, nunca por UPDATE direto.
+const directStatus = await as("member1", "update public.work_orders set status = 'completed' where id = $1", [WO]);
+check("UPDATE direto no status da ordem é recusado", directStatus.error !== null, directStatus.error?.message ?? "alterou (falha)");
 // Não pode gravar um evento em nome de outra pessoa (falsificação).
 const evForge = await as("member1", "insert into public.work_order_events (company_id, work_order_id, actor_id, event_type) values ($1,$2,$3,'forged')", [COMP1, WO, USERS.owner1]);
 check("não registra evento em nome de outro usuário", evForge.error !== null, evForge.error?.message ?? "aceito (falha)");
@@ -152,6 +156,10 @@ check("tarefa não usa coluna de outra empresa", mixed.error !== null, mixed.err
 // Agendamento vinculado a uma ordem é aceito.
 const ap1 = await as("member1", "insert into public.appointments (company_id, employee_id, service_id, customer_id, work_order_id, starts_at, ends_at) values ($1,$2,$3,$4,$5,'2026-12-03 09:00-03','2026-12-03 11:00-03')", [COMP1, emp, svc, cust, WO]);
 check("agendamento vinculado à ordem de serviço", !ap1.error, ap1.error?.message);
+
+// Valor e status do atendimento só pelo fechamento, nunca por UPDATE direto.
+const directValue = await as("member1", "update public.appointments set status = 'completed', amount_paid = 9999 where company_id = $1 and starts_at = '2026-12-03 09:00-03'", [COMP1]);
+check("UPDATE direto de valor/status do atendimento é recusado", directValue.error !== null, directValue.error?.message ?? "alterou (falha)");
 
 // Mesmo profissional, horário sobreposto: continua bloqueado.
 const ap2 = await as("member1", "insert into public.appointments (company_id, employee_id, service_id, customer_id, starts_at, ends_at) values ($1,$2,$3,$4,'2026-12-03 10:00-03','2026-12-03 10:30-03')", [COMP1, emp, svc, cust]);
