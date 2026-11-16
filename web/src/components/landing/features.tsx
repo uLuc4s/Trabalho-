@@ -1,6 +1,5 @@
 // Seção de recursos da landing: lista de benefícios com ícone, título e texto.
 // Os itens entram em sequência ao rolar, e cada um tem o brilho que acompanha o cursor.
-// ATENÇÃO: alguns itens descrevem recursos que ainda não estão prontos (Google Agenda e e-mail de confirmação).
 import {
   BellRing,
   CalendarClock,
@@ -33,9 +32,8 @@ const features = [
   },
   {
     icon: RefreshCw,
-    title: "Google Agenda",
-    // PENDENTE: a integração com o Google Agenda ainda não foi construída.
-    text: "Cada pessoa conecta a própria conta e o atendimento aparece na agenda dela.",
+    title: "Remarcação pelo cliente",
+    text: "Quem agendou remarca ou cancela pelo próprio link, dentro do prazo que você definir.",
   },
   {
     icon: ClipboardList,
@@ -49,9 +47,8 @@ const features = [
   },
   {
     icon: BellRing,
-    title: "Confirmação por e-mail",
-    // PENDENTE: o envio de e-mail depende de um provedor ainda não contratado.
-    text: "O cliente recebe o horário confirmado e um arquivo para salvar na agenda.",
+    title: "Relatórios do mês",
+    text: "Receita recebida, formas de pagamento, faltas e os serviços mais feitos, sem planilha.",
   },
 ];
 
