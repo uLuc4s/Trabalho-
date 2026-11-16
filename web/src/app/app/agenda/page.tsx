@@ -74,6 +74,8 @@ export default async function AgendaPage({
   }
 
   const list = (rows ?? []) as Row[];
+  const active = list.filter((r) => r.status !== "cancelled");
+  const expected = active.reduce((sum, r) => sum + Number(first(r.services)?.price ?? 0), 0);
   const dayLabel = new Date(`${date}T12:00:00Z`).toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "2-digit",
@@ -121,7 +123,10 @@ export default async function AgendaPage({
       />
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Atendimentos do dia · {list.length}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-medium text-muted-foreground">Atendimentos do dia · {active.length} ativos</h2>
+          {expected > 0 && <p className="text-sm tabular-nums text-muted-foreground">Previsto: R$ {expected.toFixed(2).replace(".", ",")}</p>}
+        </div>
         {list.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
             Nenhum atendimento neste dia.

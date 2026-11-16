@@ -31,6 +31,18 @@ export default async function OrdensPage() {
 
   const list = (rows ?? []) as Row[];
 
+  const { data: events } = await supabase
+    .from("work_order_events")
+    .select("work_order_id, event_type, payload, created_at")
+    .order("created_at", { ascending: false })
+    .limit(300);
+  const historyByOrder = new Map<string, { event_type: string; payload: { from?: string; to?: string }; created_at: string }[]>();
+  for (const e of (events ?? []) as { work_order_id: string; event_type: string; payload: { from?: string; to?: string }; created_at: string }[]) {
+    const list = historyByOrder.get(e.work_order_id) ?? [];
+    list.push(e);
+    historyByOrder.set(e.work_order_id, list);
+  }
+
   const { data: linked } = await supabase
     .from("appointments")
     .select("work_order_id, details")
@@ -71,7 +83,19 @@ export default async function OrdensPage() {
                     {STATUS_LABEL[row.status] ?? row.status}
                   </span>
                 </div>
-                <WorkOrderActions workOrderId={row.id} status={row.status} />
+                <div className="flex flex-col items-end gap-2">
+                  <WorkOrderActions workOrderId={row.id} status={row.status} />
+                  <details className="text-xs text-muted-foreground">
+                    <summary className="cursor-pointer">Histórico ({historyByOrder.get(row.id)?.length ?? 0})</summary>
+                    <ul className="mt-2 flex flex-col gap-1 text-right">
+                      {(historyByOrder.get(row.id) ?? []).map((e, i) => (
+                        <li key={i}>
+                          {e.event_type === "created" ? "Ordem criada" : `${STATUS_LABEL[e.payload.from ?? ""] ?? e.payload.from} → ${STATUS_LABEL[e.payload.to ?? ""] ?? e.payload.to}`} · {formatDateTime(e.created_at)}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </div>
               </li>
             );
           })}

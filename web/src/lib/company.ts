@@ -58,3 +58,7 @@ export function formatDateTime(iso: string) {
     timeZone: "America/Sao_Paulo",
   });
 }
+
+export function daysAgoMs(days: number) {
+  return Date.now() - days * 86400000;
+}

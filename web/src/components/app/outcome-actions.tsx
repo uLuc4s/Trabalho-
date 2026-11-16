@@ -45,7 +45,11 @@ export function OutcomeActions({ appointmentId, defaultAmount }: { appointmentId
             <button
               key={m.value}
               type="button"
-              onClick={() => setMethod(m.value)}
+              onClick={() => {
+                setMethod(m.value);
+                const value = Number(amount.replace(",", "."));
+                if (amount.trim() !== "" && !Number.isNaN(value) && value >= 0) send("completed", m.value, value);
+              }}
               aria-pressed={method === m.value}
               className={cn(
                 "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-all duration-200",

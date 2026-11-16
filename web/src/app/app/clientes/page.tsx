@@ -1,11 +1,18 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Search } from "lucide-react";
 import { ForgetCustomer } from "@/components/app/forget-customer";
-import { formatDateTime, getCurrentCompany } from "@/lib/company";
+import { daysAgoMs, formatDateTime, getCurrentCompany } from "@/lib/company";
 
-export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const { q } = await searchParams;
+export default async function ClientesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; sem_retorno?: string }>;
+}) {
+  await connection();
+  const { q, sem_retorno } = await searchParams;
   const term = (q ?? "").trim().toLowerCase();
+  const onlyInactive = sem_retorno === "1";
   const { supabase, role } = await getCurrentCompany();
   const canManage = role === "owner" || role === "admin";
 
@@ -23,9 +30,21 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
     stats.set(a.customer_id, s);
   }
 
-  const list = (customers ?? []).filter(
-    (c) => !term || c.name.toLowerCase().includes(term) || c.phone.includes(term.replace(/\D/g, "") || "#"),
-  );
+  const cutoff = daysAgoMs(30);
+  const digits = term.replace(/\D/g, "");
+  const list = (customers ?? []).filter((c) => {
+    if (term && !c.name.toLowerCase().includes(term) && !(digits && c.phone.includes(digits))) return false;
+    if (onlyInactive) {
+      const last = stats.get(c.id)?.last;
+      if (last && new Date(last).getTime() >= cutoff) return false;
+    }
+    return true;
+  });
+
+  const inactiveCount = (customers ?? []).filter((c) => {
+    const last = stats.get(c.id)?.last;
+    return !last || new Date(last).getTime() < cutoff;
+  }).length;
 
   return (
     <div className="flex flex-col gap-8">
@@ -33,23 +52,41 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
         <div>
           <h1 className="font-display text-5xl tracking-tight">Clientes</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {customers?.length ?? 0} cadastrados. O histórico se forma a partir dos atendimentos.
+            {customers?.length ?? 0} cadastrados · {inactiveCount} sem retorno há 30 dias
           </p>
         </div>
-        <form action="/app/clientes" className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <input
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="Buscar nome ou telefone"
-            className="h-10 w-64 rounded-full border border-input bg-background pl-9 pr-4 text-sm focus:border-accent focus:outline-none"
-          />
+        <form action="/app/clientes" className="flex items-center gap-2">
+          {onlyInactive && <input type="hidden" name="sem_retorno" value="1" />}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <input
+              name="q"
+              defaultValue={q ?? ""}
+              placeholder="Nome ou telefone"
+              className="h-10 w-56 rounded-full border border-input bg-background pl-9 pr-4 text-sm focus:border-accent focus:outline-none"
+            />
+          </div>
         </form>
       </header>
 
+      <div className="flex flex-wrap gap-2 text-sm">
+        <Link
+          href="/app/clientes"
+          className={`rounded-full border px-4 py-1.5 transition-colors ${!onlyInactive ? "border-accent bg-accent/10" : "border-border hover:bg-secondary"}`}
+        >
+          Todos
+        </Link>
+        <Link
+          href="/app/clientes?sem_retorno=1"
+          className={`rounded-full border px-4 py-1.5 transition-colors ${onlyInactive ? "border-accent bg-accent/10" : "border-border hover:bg-secondary"}`}
+        >
+          Sem retorno há 30 dias
+        </Link>
+      </div>
+
       {list.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          {term ? "Nenhum cliente encontrado." : "Nenhum cliente ainda. Eles aparecem quando agendam pela sua página."}
+          {term || onlyInactive ? "Nenhum cliente com esse filtro." : "Nenhum cliente ainda. Eles aparecem quando agendam pela sua página."}
         </div>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
