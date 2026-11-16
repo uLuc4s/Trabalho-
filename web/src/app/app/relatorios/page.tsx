@@ -1,65 +1,41 @@
+// Página de relatórios do mês: receita, contagens e gráficos.
+// A consulta fica em services, as contas em mappers e os tipos em dto.
+
 import { BarChart } from "@/components/app/charts";
 import { getCurrentCompany, todayInSaoPaulo } from "@/lib/company";
+import { getMonthAppointments } from "@/services/relatorios.service";
+import { buildReport, formatBRL } from "@/mappers/relatorios.mapper";
 
-type Pick<T> = T | T[] | null;
-type Row = {
-  starts_at: string;
-  status: string;
-  payment_method: string | null;
-  amount_paid: number | null;
-  services: Pick<{ name: string }>;
-};
-
-const first = <T,>(value: Pick<T>): T | undefined => (Array.isArray(value) ? value[0] : value ?? undefined);
-const money = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const PAYMENT_LABEL: Record<string, string> = { pix: "Pix", cartao: "Cartão", dinheiro: "Dinheiro" };
-
+// Entrada: nada além da sessão do usuário.
+// Saída: relatório do mês atual.
 export default async function RelatoriosPage() {
   const { supabase } = await getCurrentCompany();
   const today = todayInSaoPaulo();
+  // Primeiro instante do mês atual, com o fuso de São Paulo.
   const monthStart = `${today.slice(0, 8)}01T00:00:00-03:00`;
 
-  const { data, error: loadError } = await supabase
-    .from("appointments")
-    .select("starts_at, status, payment_method, amount_paid, services(name)")
-    .gte("starts_at", monthStart);
+  const { data, error: loadError } = await getMonthAppointments(supabase, monthStart);
+  const report = buildReport(data ?? []); // todas as contas saem do mapper
 
-  const rows = (data ?? []) as Row[];
-  const completed = rows.filter((r) => r.status === "completed");
-  const revenue = completed.reduce((sum, r) => sum + Number(r.amount_paid ?? 0), 0);
-  const noShows = rows.filter((r) => r.status === "no_show").length;
-  const cancelled = rows.filter((r) => r.status === "cancelled").length;
-  const pending = rows.filter((r) => r.status === "confirmed" || r.status === "pending_confirmation").length;
-
-  const byMethod = new Map<string, number>();
-  for (const r of completed) {
-    if (!r.payment_method) continue;
-    byMethod.set(r.payment_method, (byMethod.get(r.payment_method) ?? 0) + Number(r.amount_paid ?? 0));
-  }
-  const methodData = [...byMethod.entries()].map(([k, v]) => ({ label: PAYMENT_LABEL[k] ?? k, value: Math.round(v) }));
-
-  const byService = new Map<string, number>();
-  for (const r of completed) {
-    const name = first(r.services)?.name ?? "Sem nome";
-    byService.set(name, (byService.get(name) ?? 0) + 1);
-  }
-  const topServices = [...byService.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-
+  // Cartões do topo do relatório.
   const kpis = [
-    { label: "Receita recebida", value: money(revenue) },
-    { label: "Atendimentos concluídos", value: String(completed.length) },
-    { label: "Faltas", value: String(noShows) },
-    { label: "Cancelados", value: String(cancelled) },
+    { label: "Receita recebida", value: formatBRL(report.revenue) },
+    { label: "Atendimentos concluídos", value: String(report.completedCount) },
+    { label: "Faltas", value: String(report.noShows) },
+    { label: "Cancelados", value: String(report.cancelled) },
   ];
 
   return (
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="font-display text-5xl tracking-tight">Relatórios</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Mês atual. {pending} atendimentos ainda aguardam fechamento.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Mês atual. {report.pending} atendimentos ainda aguardam fechamento.</p>
       </header>
 
-      {loadError && <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar os dados do mês. Recarregue a página.</p>}
+      {/* Aviso se a consulta falhar, em vez de mostrar zeros como se fossem reais. */}
+      {loadError && (
+        <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar os dados do mês. Recarregue a página.</p>
+      )}
 
       <section className="grid gap-4 md:grid-cols-4">
         {kpis.map((k) => (
@@ -73,22 +49,22 @@ export default async function RelatoriosPage() {
       <section className="grid gap-4 xl:grid-cols-2">
         <div className="rounded-2xl border border-border bg-background p-6">
           <h2 className="font-body text-base font-semibold">Receita por forma de pagamento</h2>
-          {methodData.length === 0 ? (
+          {report.byMethod.length === 0 ? (
             <p className="mt-6 text-sm text-muted-foreground">Nenhum pagamento registrado neste mês.</p>
           ) : (
             <div className="mt-6">
-              <BarChart data={methodData} height={160} />
+              <BarChart data={report.byMethod} height={160} />
             </div>
           )}
         </div>
 
         <div className="rounded-2xl border border-border bg-background p-6">
           <h2 className="font-body text-base font-semibold">Serviços mais feitos</h2>
-          {topServices.length === 0 ? (
+          {report.topServices.length === 0 ? (
             <p className="mt-6 text-sm text-muted-foreground">Nenhum atendimento concluído neste mês.</p>
           ) : (
             <ul className="mt-6 divide-y divide-border">
-              {topServices.map(([name, count]) => (
+              {report.topServices.map(([name, count]) => (
                 <li key={name} className="flex items-center justify-between py-3 text-sm">
                   <span>{name}</span>
                   <span className="tabular-nums text-muted-foreground">{count}</span>
