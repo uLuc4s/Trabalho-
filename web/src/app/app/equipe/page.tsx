@@ -5,9 +5,6 @@ import { EmployeeSetup } from "@/components/app/employee-setup"; // serviços e 
 import { InviteForm } from "@/components/app/invite-form"; // gera convite para o painel
 import { getCurrentCompany } from "@/lib/company";
 
-// Relação do Supabase: objeto ou lista.
-type Pick<T> = T | T[] | null;
-
 // Monta a página de equipe.
 export default async function EquipePage() {
   const { supabase, company, role } = await getCurrentCompany();
@@ -18,7 +15,7 @@ export default async function EquipePage() {
     await Promise.all([
       supabase.from("employees").select("id, display_name, active").order("display_name"),
       // Nome dos membros vem da tabela de perfis. Ver a observação no fim do arquivo.
-      supabase.from("company_members").select("id, role, status, profiles(full_name)").order("created_at"),
+      supabase.from("company_members").select("id, role, status").order("created_at"),
       // Convites ainda não aceitos e dentro do prazo.
       supabase
         .from("invitations")
@@ -33,8 +30,10 @@ export default async function EquipePage() {
 
   // Texto de cada papel na lista de acessos.
   const roleLabel: Record<string, string> = { owner: "Dono", admin: "Administrador", member: "Equipe", viewer: "Leitura" };
-  // Pega o nome do perfil, que pode vir como objeto ou lista.
-  const memberName = (value: Pick<{ full_name: string }>) => (Array.isArray(value) ? value[0]?.full_name : value?.full_name);
+  // Nomes dos membros pela função do banco (a leitura direta de perfis só traz o próprio).
+  const { data: nameData } = await supabase.rpc("app_company_member_names", { p_company: company.id });
+  const nameRows = (nameData ?? []) as { member_id: string; full_name: string }[];
+  const nameById = new Map<string, string>(nameRows.map((r) => [r.member_id, r.full_name]));
 
   return (
     <div className="flex flex-col gap-10">
@@ -104,7 +103,7 @@ export default async function EquipePage() {
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
           {(members ?? []).map((member) => (
             <li key={member.id} className="flex items-center justify-between gap-4 p-5">
-              <span className="font-medium">{memberName(member.profiles as Pick<{ full_name: string }>) ?? "Sem nome"}</span>
+              <span className="font-medium">{nameById.get(member.id) ?? "Sem nome"}</span>
               <span className="rounded-full bg-secondary px-3 py-1 text-xs">{roleLabel[member.role] ?? member.role}</span>
             </li>
           ))}
@@ -114,6 +113,3 @@ export default async function EquipePage() {
   );
 }
 
-// OBSERVAÇÃO (pendência conhecida): a política da tabela profiles deixa cada usuário ler só o próprio perfil.
-// Por isso, para outros membros, o nome aparece como "Sem nome". Correção prevista: uma função que devolva
-// nome e e-mail de membros da mesma empresa, ou uma política de leitura entre membros.

@@ -40,6 +40,7 @@ await db.exec(`
 // Aplica a fundação e a política que deixa o membro ler o próprio vínculo.
 await db.exec(readFileSync(MIGRATION, "utf8"));
 await db.exec(readFileSync(new URL("../migrations/20261116000400_membro_ve_propria_linha.sql", import.meta.url), "utf8"));
+await db.exec(readFileSync(new URL("../migrations/20261116001500_nomes_da_equipe.sql", import.meta.url), "utf8"));
 // Simula as permissões padrão do Supabase para as tabelas e funções.
 await db.exec(`
   grant usage on schema public to anon, authenticated;
@@ -178,6 +179,12 @@ const ownRow = await as("invitee", "select company_id from public.company_member
 check("membro enxerga a própria linha de vínculo", ownRow.rows.length >= 1, `rows=${ownRow.rows.length}`);
 
 // Resumo final: quantas passaram e quantas falharam. Falha de qualquer uma encerra com código 1.
+// Nomes da equipe: o convidado vê o nome do dono pela função; um estranho não vê nada da empresa.
+const names = await as("invitee", "select full_name from public.app_company_member_names($1)", [COMP1]);
+check("membro vê o nome dos colegas da própria empresa", names.rows.some((r) => r.full_name === "x"), names.error?.message);
+const namesOutsider = await as("outsider", "select full_name from public.app_company_member_names($1)", [COMP1]);
+check("estranho não vê nomes de empresa alheia", namesOutsider.rows.length === 0, namesOutsider.error?.message);
+
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} verificações passaram`);
 process.exit(failed ? 1 : 0);
