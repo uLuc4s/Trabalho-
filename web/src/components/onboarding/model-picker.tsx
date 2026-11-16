@@ -21,6 +21,7 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
   const [selected, setSelected] = useState<BusinessModel | null>(null);
   const [segment, setSegment] = useState<Segment | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [servicesFailed, setServicesFailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function confirm() {
@@ -44,7 +45,9 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
         if (examples.length > 0) {
           const { error: servicesError } = await supabase.from("services").insert(examples.map((s) => ({ ...s, company_id: companyId })));
           if (servicesError) {
-            setError("Empresa configurada, mas os serviços de exemplo não foram criados. Cadastre-os em Serviços.");
+            setError("Empresa configurada, mas os serviços de exemplo não foram criados.");
+            setServicesFailed(true);
+            return;
           }
         }
       }
@@ -90,6 +93,18 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {servicesFailed && (
+        <button
+          type="button"
+          onClick={() => {
+            router.push("/app/servicos");
+            router.refresh();
+          }}
+          className="self-start text-sm font-medium text-accent underline underline-offset-4"
+        >
+          Cadastrar serviços agora
+        </button>
+      )}
 
       <div className="flex flex-col gap-3">
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Qual é o seu ramo?</p>
