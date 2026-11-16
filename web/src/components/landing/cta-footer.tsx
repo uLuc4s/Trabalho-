@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import { CalendarCheck } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { Copyright } from "./copyright";
 
@@ -29,9 +29,8 @@ export function CtaFooter() {
 
       <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 md:flex-row md:items-center md:justify-between">
-          <Link href="/" className="flex items-center gap-2 text-base font-semibold tracking-tight">
-            <CalendarCheck className="h-4 w-4 text-accent" aria-hidden />
-            Agendfix
+          <Link href="/" className="flex items-center">
+            <Image src="/brand/agendfix-principal.svg" alt="agendfix" width={110} height={25} unoptimized />
           </Link>
 
           <nav aria-label="Rodapé" className="flex flex-wrap items-center gap-6">

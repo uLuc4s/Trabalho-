@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, CalendarCheck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 
 export function AuthShell({
@@ -31,9 +32,8 @@ export function AuthShell({
       </Link>
 
       <Reveal y={16} className="relative z-10 mb-8">
-        <Link href="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight">
-          <CalendarCheck className="h-5 w-5 text-accent" aria-hidden />
-          Agendfix
+        <Link href="/" className="flex items-center">
+          <Image src="/brand/agendfix-principal.svg" alt="agendfix" width={150} height={34} priority unoptimized />
         </Link>
       </Reveal>
 
