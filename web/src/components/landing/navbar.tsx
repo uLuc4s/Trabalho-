@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ScrollHeader } from "@/components/motion/page-chrome";
@@ -20,8 +21,12 @@ export function Navbar() {
       <Link
         href="/"
         aria-label="Voltar para o início"
-        className="flex items-center rounded-lg transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group flex items-center gap-2 rounded-lg transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
+        <ArrowLeft
+          className="h-5 w-5 -translate-x-3 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+          aria-hidden
+        />
         <Image src="/brand/agendfix-principal.svg" alt="" width={180} height={40} priority unoptimized />
       </Link>
 
