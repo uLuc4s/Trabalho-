@@ -38,7 +38,7 @@ function shiftDate(date: string, days: number) {
 export default function AgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; mes?: string }>;
+  searchParams: Promise<{ data?: string; mes?: string; vista?: string }>;
 }) {
   return (
     <Suspense fallback={null}>
@@ -50,11 +50,12 @@ export default function AgendaPage({
 async function AgendaContent({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; mes?: string }>;
+  searchParams: Promise<{ data?: string; mes?: string; vista?: string }>;
 }) {
   // Avisa o Next que a página depende da requisição (data de hoje e parâmetros).
   await connection();
-  const { data, mes } = await searchParams;
+  const { data, mes, vista } = await searchParams;
+  const semana = vista === "semana"; // visão semanal: mostra os 7 dias da semana da data escolhida
   const today = todayInSaoPaulo();
   // Usa a data da URL só se estiver no formato certo; senão, usa hoje.
   const date = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : today;
@@ -65,6 +66,11 @@ async function AgendaContent({
   // Em advocacia e clínica, a agenda não mostra o serviço nem o telefone (sigilo).
   const sensitive = company.segment === "advocacia" || company.segment === "clinica";
   const range = dayRange(date); // início e fim do dia
+  // Semana (domingo a sábado) que contém a data escolhida.
+  const base = new Date(`${date}T12:00:00Z`);
+  const sunday = new Date(base.getTime() - base.getUTCDay() * 86400000).toISOString().slice(0, 10);
+  const saturday = new Date(new Date(`${sunday}T12:00:00Z`).getTime() + 6 * 86400000).toISOString().slice(0, 10);
+  const weekRange = { start: dayRange(sunday).start, end: dayRange(saturday).end };
   // Primeiro instante do mês e do mês seguinte, para o calendário.
   const monthStart = `${year}-${String(month).padStart(2, "0")}-01T00:00:00-03:00`;
   const nextMonth = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`;
@@ -72,7 +78,7 @@ async function AgendaContent({
 
   // Busca o dia e o mês em paralelo.
   const [{ data: rows, error: rowsError }, { data: monthRows, error: monthError }] = await Promise.all([
-    getAppointmentsInRange(supabase, range),
+    getAppointmentsInRange(supabase, semana ? weekRange : range),
     getMonthStatuses(supabase, monthStart, monthEnd),
   ]);
 
@@ -94,6 +100,10 @@ async function AgendaContent({
         <div>
           <p className="text-sm capitalize text-muted-foreground">{dayLabel}</p>
           <h1 className="mt-1 font-display text-5xl tracking-tight">Agenda</h1>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <Link href={`/app/agenda?data=${date}`} className={`rounded-full border px-4 py-1.5 transition-colors ${!semana ? "border-accent bg-accent/10" : "border-border hover:bg-secondary"}`}>Dia</Link>
+          <Link href={`/app/agenda?data=${date}&vista=semana`} className={`rounded-full border px-4 py-1.5 transition-colors ${semana ? "border-accent bg-accent/10" : "border-border hover:bg-secondary"}`}>Semana</Link>
         </div>
         <div className="flex items-center gap-2">
           {/* Navegação entre dias: anterior, hoje e próximo. */}
@@ -147,7 +157,7 @@ async function AgendaContent({
               return (
                 <li key={row.id} className="grid gap-4 p-5 md:grid-cols-[110px_1fr_auto] md:items-center">
                   <p className={cn("font-display text-3xl tabular-nums", cancelled && "text-muted-foreground line-through")}>
-                    {formatTime(row.starts_at)}
+                    {semana ? `${new Date(row.starts_at).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", timeZone: "America/Sao_Paulo" })} · ` : ""}{formatTime(row.starts_at)}
                   </p>
                   <div className="min-w-0">
                     <p className={cn("truncate font-medium", cancelled && "text-muted-foreground line-through")}>{customer?.name}</p>

@@ -107,6 +107,17 @@ export function AppSidebar({ companyName, slug, model }: { companyName: string; 
         <p className="mt-1 truncate font-body text-sm font-semibold">{companyName}</p>
       </div>
 
+      {/* Busca global: leva para a página de busca com o termo digitado. */}
+      <form action="/app/busca" className="relative">
+        <input
+          name="q"
+          type="search"
+          placeholder="Buscar cliente ou serviço"
+          aria-label="Buscar cliente ou serviço"
+          className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm focus:border-accent focus:outline-none"
+        />
+      </form>
+
       <nav aria-label="Painel" className="flex flex-col gap-1">
         {visibleItems.map((item) => {
           // Início só fica ativo na página exata; os outros ficam ativos em suas subpáginas também.

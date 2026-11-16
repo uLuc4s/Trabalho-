@@ -8,7 +8,8 @@ import { Loader2, Plus } from "lucide-react"; // ícones
 import { Button } from "@/components/ui/button"; // botão padrão
 import { Input } from "@/components/ui/input"; // campo padrão
 import { Label } from "@/components/ui/label"; // rótulo padrão
-import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast"; // cliente do navegador
 
 // Entrada: id da empresa.
 // Saída: formulário de cadastro. Limpa o campo e atualiza a lista depois de salvar.
@@ -16,6 +17,7 @@ export function EmployeeForm({ companyId }: { companyId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition(); // true enquanto grava
   const [error, setError] = useState<string | null>(null);
+  const { notify } = useToast();
 
   // Valida o nome (2+ caracteres) e grava o profissional.
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -34,6 +36,7 @@ export function EmployeeForm({ companyId }: { companyId: string }) {
         setError("Não foi possível cadastrar.");
         return;
       }
+      notify("Profissional cadastrado");
       form.reset();
       router.refresh();
     });

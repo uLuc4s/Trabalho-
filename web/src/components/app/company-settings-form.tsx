@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"; // atualiza os dados da página dep
 import { useState, useTransition } from "react"; // estado e transição de envio
 import { Check, Loader2 } from "lucide-react"; // ícones
 import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils"; // junta classes CSS
 
 // Formas de pagamento que a empresa pode aceitar. Os mesmos três valores que o banco aceita.
@@ -39,6 +40,7 @@ export function CompanySettingsForm({ company }: { company: Settings }) {
   const [pending, startTransition] = useTransition(); // true enquanto salva
   const [saved, setSaved] = useState(false); // true depois de salvar, até editar de novo
   const [error, setError] = useState<string | null>(null);
+  const { notify } = useToast();
   // Um estado por campo, já com o valor atual. Texto vazio no banco vira "" aqui.
   const [name, setName] = useState(company.name);
   const [description, setDescription] = useState(company.description ?? "");
@@ -84,6 +86,7 @@ export function CompanySettingsForm({ company }: { company: Settings }) {
         return;
       }
       setSaved(true);
+      notify("Configurações salvas");
       router.refresh(); // a página pública e o menu passam a usar os dados novos
     });
   }

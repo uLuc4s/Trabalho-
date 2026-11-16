@@ -5,7 +5,8 @@
 import { useRouter } from "next/navigation"; // para atualizar a tela depois de decidir
 import { useState, useTransition } from "react"; // estado e transição de carregamento
 import { Check, Loader2, X } from "lucide-react"; // ícones
-import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast"; // cliente do navegador
 
 // Decisões possíveis que o usuário pode confirmar.
 type Decision = "approved" | "rejected";
@@ -17,6 +18,7 @@ export function ReviewRequest({ requestId }: { requestId: string }) {
   const [pending, startTransition] = useTransition(); // true enquanto grava
   const [asking, setAsking] = useState<Decision | null>(null); // decisão aguardando confirmação
   const [error, setError] = useState<string | null>(null);
+  const { notify } = useToast();
 
   // Chama a função do banco que aprova ou recusa a solicitação.
   // Entrada: a decisão confirmada.
@@ -31,6 +33,7 @@ export function ReviewRequest({ requestId }: { requestId: string }) {
         setError(rpcError.message);
         return;
       }
+      notify(decision === "approved" ? "Pedido aprovado e ordem aberta" : "Pedido recusado");
       router.refresh(); // mostra a solicitação na lista de decididas
     });
   }
