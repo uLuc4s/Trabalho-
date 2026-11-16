@@ -44,8 +44,8 @@ const actions = [
 
 const team = [
   { name: "Carlos", value: "R$ 3.240,00", detail: "12 atendimentos" },
-  { name: "Mariana", value: "R$ 2.180,50", detail: "8 atendimentos" },
-  { name: "João", value: "R$ 1.590,00", detail: "6 atendimentos" },
+  { name: "Lucas", value: "R$ 2.180,50", detail: "8 atendimentos" },
+  { name: "João Flausino", value: "R$ 1.590,00", detail: "6 atendimentos" },
 ];
 
 const recent = [
@@ -87,7 +87,7 @@ export function DashboardPreview() {
           <div className="flex items-center gap-3">
             <Bell className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-[10px] font-semibold">
-              MB
+              LA
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@ export function DashboardPreview() {
 
           <main className="flex min-w-0 flex-1 flex-col gap-3 bg-secondary/30 p-3 md:p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="mr-auto text-sm font-semibold">Olá, Matheus</p>
+              <p className="mr-auto text-sm font-semibold">Olá, Lucas</p>
               {actions.map((action) => (
                 <span
                   key={action.label}
