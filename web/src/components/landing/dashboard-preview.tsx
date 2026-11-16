@@ -117,7 +117,7 @@ export function DashboardPreview() {
             ))}
           </aside>
 
-          <main className="flex flex-1 flex-col gap-3 bg-secondary/30 p-4">
+          <main className="flex min-w-0 flex-1 flex-col gap-3 bg-secondary/30 p-3 md:p-4">
             <div className="flex flex-wrap items-center gap-2">
               <p className="mr-auto text-sm font-semibold">Olá, Matheus</p>
               {actions.map((action) => (
@@ -135,8 +135,8 @@ export function DashboardPreview() {
               ))}
             </div>
 
-            <div className="flex gap-3">
-              <div className="flex flex-1 basis-0 flex-col gap-3 rounded-xl border border-border bg-background p-4">
+            <div className="flex flex-col gap-3 md:flex-row">
+              <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-xl border border-border bg-background p-4 md:basis-0">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">Faturamento do mês</span>
                   <span className="text-muted-foreground">Últimos 30 dias</span>
@@ -162,7 +162,7 @@ export function DashboardPreview() {
                 </svg>
               </div>
 
-              <div className="flex flex-1 basis-0 flex-col rounded-xl border border-border bg-background p-4">
+              <div className="flex min-w-0 flex-1 flex-col rounded-xl border border-border bg-background p-4 md:basis-0">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-xs font-medium">Equipe</span>
                   <span className="text-muted-foreground">Este mês</span>
@@ -194,19 +194,19 @@ export function DashboardPreview() {
                 <span className="text-xs font-medium">Próximos atendimentos</span>
                 <Clock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
               </div>
-              <div className="grid grid-cols-[1.2fr_1.2fr_0.6fr_0.8fr] gap-x-3 border-b border-border pb-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <div className="grid grid-cols-[1.3fr_0.6fr_0.9fr] gap-x-3 border-b border-border pb-1.5 text-[10px] uppercase tracking-wide text-muted-foreground sm:grid-cols-[1.2fr_1.2fr_0.6fr_0.8fr]">
                 <span>Cliente</span>
-                <span>Serviço</span>
+                <span className="hidden sm:block">Serviço</span>
                 <span>Horário</span>
                 <span>Status</span>
               </div>
               {recent.map((row) => (
                 <div
                   key={row.client}
-                  className="grid grid-cols-[1.2fr_1.2fr_0.6fr_0.8fr] gap-x-3 border-b border-border/60 py-2 last:border-0"
+                  className="grid grid-cols-[1.3fr_0.6fr_0.9fr] gap-x-3 border-b border-border/60 py-2 last:border-0 sm:grid-cols-[1.2fr_1.2fr_0.6fr_0.8fr]"
                 >
-                  <span className="font-medium">{row.client}</span>
-                  <span className="text-muted-foreground">{row.service}</span>
+                  <span className="truncate font-medium">{row.client}</span>
+                  <span className="hidden text-muted-foreground sm:block">{row.service}</span>
                   <span>{row.time}</span>
                   <span className={row.tone}>{row.status}</span>
                 </div>
