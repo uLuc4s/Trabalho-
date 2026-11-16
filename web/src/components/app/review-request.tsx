@@ -1,18 +1,25 @@
+// Botões de decisão de uma solicitação: "Recusar" e "Aprovar e abrir ordem", com confirmação antes.
+// Roda no navegador porque tem clique, confirmação e chamada ao banco.
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Check, Loader2, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation"; // para atualizar a tela depois de decidir
+import { useState, useTransition } from "react"; // estado e transição de carregamento
+import { Check, Loader2, X } from "lucide-react"; // ícones
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Decisões possíveis que o usuário pode confirmar.
 type Decision = "approved" | "rejected";
 
+// Entrada: id da solicitação.
+// Saída: botões de decisão. Ao clicar, pede confirmação antes de chamar o banco.
 export function ReviewRequest({ requestId }: { requestId: string }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [asking, setAsking] = useState<Decision | null>(null);
+  const [pending, startTransition] = useTransition(); // true enquanto grava
+  const [asking, setAsking] = useState<Decision | null>(null); // decisão aguardando confirmação
   const [error, setError] = useState<string | null>(null);
 
+  // Chama a função do banco que aprova ou recusa a solicitação.
+  // Entrada: a decisão confirmada.
   function decide(decision: Decision) {
     setError(null);
     startTransition(async () => {
@@ -24,10 +31,11 @@ export function ReviewRequest({ requestId }: { requestId: string }) {
         setError(rpcError.message);
         return;
       }
-      router.refresh();
+      router.refresh(); // mostra a solicitação na lista de decididas
     });
   }
 
+  // Tela de confirmação: explica o que vai acontecer e pede o "sim".
   if (asking) {
     return (
       <div className="flex flex-col items-end gap-2">
@@ -53,6 +61,7 @@ export function ReviewRequest({ requestId }: { requestId: string }) {
     );
   }
 
+  // Tela normal: os dois botões de decisão. Cada um só abre a confirmação.
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex items-center gap-2">

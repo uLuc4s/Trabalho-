@@ -1,10 +1,14 @@
+// Botões de avanço de uma ordem de serviço. Mostra só as transições permitidas para o status atual.
+// Roda no navegador porque tem clique e chamada ao banco.
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation"; // para atualizar a tela depois de mudar o status
+import { useState, useTransition } from "react"; // estado e transição de carregamento
+import { Loader2 } from "lucide-react"; // ícone de carregamento
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Transições permitidas por status, com o texto de cada botão.
+// Deve espelhar a tabela de transições da função app_set_work_order_status no banco.
 const NEXT: Record<string, { status: string; label: string }[]> = {
   open: [
     { status: "scheduled", label: "Programar" },
@@ -20,12 +24,16 @@ const NEXT: Record<string, { status: string; label: string }[]> = {
   ],
 };
 
+// Entrada: id e status atual da ordem.
+// Saída: os botões das ações possíveis. Ordem concluída ou cancelada não mostra nada.
 export function WorkOrderActions({ workOrderId, status }: { workOrderId: string; status: string }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition(); // true enquanto grava
   const [error, setError] = useState<string | null>(null);
-  const actions = NEXT[status] ?? [];
+  const actions = NEXT[status] ?? []; // ações do status atual, ou lista vazia
 
+  // Muda o status da ordem pelo banco.
+  // Entrada: novo status. Saída: recarrega a tela, ou mostra o erro.
   function move(next: string) {
     setError(null);
     startTransition(async () => {
@@ -42,6 +50,7 @@ export function WorkOrderActions({ workOrderId, status }: { workOrderId: string;
     });
   }
 
+  // Sem ação possível (concluída ou cancelada): não renderiza nada.
   if (actions.length === 0) return null;
 
   return (

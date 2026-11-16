@@ -1,16 +1,21 @@
+// Botão de apagar os dados de um cliente (LGPD), com confirmação em duas etapas.
+// Roda no navegador porque tem clique, confirmação e chamada ao banco.
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Loader2, Trash2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation"; // para atualizar a tela depois de apagar
+import { useState, useTransition } from "react"; // estado e transição de carregamento
+import { Loader2, Trash2 } from "lucide-react"; // ícones
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Entrada: id do cliente.
+// Saída: botão "Apagar dados". Ao clicar, aparece a confirmação com aviso de que não dá para desfazer.
 export function ForgetCustomer({ customerId }: { customerId: string }) {
   const router = useRouter();
-  const [confirming, setConfirming] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [confirming, setConfirming] = useState(false); // true quando a confirmação está aberta
+  const [pending, startTransition] = useTransition(); // true enquanto apaga
   const [error, setError] = useState<string | null>(null);
 
+  // Chama a função do banco que anonimiza o cliente e cancela os horários futuros.
   function forget() {
     setError(null);
     startTransition(async () => {
@@ -19,10 +24,11 @@ export function ForgetCustomer({ customerId }: { customerId: string }) {
         setError(rpcError.message);
         return;
       }
-      router.refresh();
+      router.refresh(); // o cliente aparece como "Cliente removido"
     });
   }
 
+  // Primeira etapa: só o botão de apagar.
   if (!confirming) {
     return (
       <button
@@ -36,6 +42,7 @@ export function ForgetCustomer({ customerId }: { customerId: string }) {
     );
   }
 
+  // Segunda etapa: aviso claro e confirmação explícita.
   return (
     <div className="flex flex-col items-end gap-2 text-xs">
       <p className="max-w-[260px] text-right text-muted-foreground">
