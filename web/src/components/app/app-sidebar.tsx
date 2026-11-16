@@ -17,8 +17,10 @@ import {
   ListTodo,
   Settings,
   Users,
+  UserRound,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { MobileNav } from "@/components/app/mobile-nav";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -26,6 +28,7 @@ const items = [
   { href: "/app/agenda", label: "Agenda", icon: CalendarDays },
   { href: "/app/solicitacoes", label: "Solicitações", icon: Inbox },
   { href: "/app/ordens", label: "Ordens de serviço", icon: ClipboardList },
+  { href: "/app/clientes", label: "Clientes", icon: UserRound },
   { href: "/app/servicos", label: "Serviços", icon: Scissors },
   { href: "/app/tarefas", label: "Tarefas", icon: ListTodo },
   { href: "/app/equipe", label: "Equipe", icon: Users },
@@ -74,6 +77,8 @@ export function AppSidebar({ companyName, slug, model }: { companyName: string; 
   }
 
   return (
+    <>
+    <MobileNav items={visibleItems} />
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-8 border-r border-border bg-background p-6 md:flex">
       <Link href="/app" className="flex items-center">
         <Image src="/brand/agendfix-principal.svg" alt="agendfix" width={150} height={33} priority unoptimized />
@@ -125,5 +130,6 @@ export function AppSidebar({ companyName, slug, model }: { companyName: string; 
         <CopyLink slug={slug} />
       </div>
     </aside>
+    </>
   );
 }
