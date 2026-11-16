@@ -1,12 +1,20 @@
+/* ESTILOS GLOBAIS
+   Define os tokens de cor, raio e sombra, e as regras base que valem para todo o site.
+   Os tokens são usados como classes Tailwind (bg-accent, text-muted-foreground etc.).
+   Os valores estão em HSL sem o "hsl()", porque o Tailwind monta a função a partir deles. */
+
+/* Importa o Tailwind, a biblioteca de animações e a variante de tema escuro (ativa com a classe .dark). */
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* Liga os tokens CSS às classes do Tailwind e às fontes carregadas no layout. */
 @theme inline {
-  --font-display: var(--font-instrument);
-  --font-body: var(--font-inter);
+  --font-display: var(--font-instrument); /* títulos */
+  --font-body: var(--font-inter); /* texto corrido */
 
+  /* Cores: cada uma aponta para a variável definida em :root abaixo. */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-primary: hsl(var(--primary));
@@ -21,42 +29,49 @@
   --color-ring: hsl(var(--ring));
   --color-destructive: hsl(var(--destructive));
 
+  /* Raios de borda derivados de um raio base (--radius). */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
 
+  /* Sombra usada nos painéis e cartões. */
   --shadow-dashboard: 0 25px 80px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
+/* Valores padrão das cores e do raio. Tema claro. */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 210 14% 17%;
-  --primary: 210 14% 17%;
+  --background: 0 0% 100%; /* branco */
+  --foreground: 210 14% 17%; /* texto quase preto azulado */
+  --primary: 210 14% 17%; /* botão principal, escuro */
   --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 96%;
+  --secondary: 0 0% 96%; /* fundos suaves */
   --secondary-foreground: 0 0% 9%;
   --muted: 0 0% 96%;
-  --muted-foreground: 184 5% 55%;
-  --accent: 239 84% 67%;
+  --muted-foreground: 184 5% 55%; /* texto secundário */
+  --accent: 239 84% 67%; /* índigo, cor de destaque da marca */
   --accent-foreground: 0 0% 100%;
   --border: 0 0% 90%;
-  --ring: 239 84% 67%;
-  --destructive: 0 72% 51%;
-  --radius: 0.5rem;
+  --ring: 239 84% 67%; /* contorno de foco */
+  --destructive: 0 72% 51%; /* vermelho para erros e exclusões */
+  --radius: 0.5rem; /* raio base dos cantos */
 }
 
+/* Regras base aplicadas a todo o documento. */
 @layer base {
+  /* Todas as bordas usam a cor de borda e todo contorno de foco usa a cor de anel, com 50% de opacidade. */
   * {
     @apply border-border outline-ring/50;
   }
 
+  /* Rolagem suave ao clicar em âncoras. O padding evita que o título fique escondido sob o cabeçalho fixo. */
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 6rem;
   }
 
+  /* Quem pediu para reduzir movimento no sistema não recebe a rolagem suave. */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -64,6 +79,7 @@
   }
 }
 
+/* Animação de abertura das perguntas da landing: sobe 4 pixels enquanto aparece. */
 @keyframes faq-reveal {
   from {
     opacity: 0;
@@ -75,6 +91,7 @@
   }
 }
 
+/* Aplica a animação ao conteúdo de uma pergunta quando ela é aberta. */
 details[open] > p {
   animation: faq-reveal 0.35s ease-out;
 }
