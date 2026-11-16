@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, ClipboardList, Inbox, Users, Wallet } from "lucide-react";
 import { BarChart, Donut, type Point } from "@/components/app/charts";
+import { CountUp } from "@/components/motion/count-up";
 import { formatTime, getCurrentCompany, todayInSaoPaulo, dayRange } from "@/lib/company";
 
 type Pick<T> = T | T[] | null;
@@ -114,7 +115,9 @@ export default async function AppHomePage() {
               <span className="text-sm text-muted-foreground">{kpi.label}</span>
               <kpi.icon className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-accent" aria-hidden />
             </div>
-            <p className="mt-5 font-display text-4xl tabular-nums tracking-tight">{kpi.value}</p>
+            <p className="mt-5 font-display text-4xl tabular-nums tracking-tight">
+              <CountUp value={kpi.value} />
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">{kpi.hint}</p>
           </Link>
         ))}
