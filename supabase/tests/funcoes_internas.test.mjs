@@ -9,6 +9,7 @@ const MIGRATIONS = [
   "../migrations/20261116000300_agendamento_publico.sql",
   "../migrations/20261116000400_membro_ve_propria_linha.sql",
   "../migrations/20261116000500_funcoes_internas.sql",
+  "../migrations/20261116001400_remarcacao_sem_conflito_consigo.sql",
 ].map((p) => readFileSync(new URL(p, import.meta.url), "utf8"));
 
 const db = new PGlite({ extensions: { btree_gist } });
@@ -126,6 +127,9 @@ check("cliente remarca para horário livre", !moved.error && moved.rows[0]?.r?.s
 
 const got = await as("anon", "select public.public_get_booking($1) as b", [APP_TOKEN]);
 check("consulta mostra o novo horário", !got.error && new Date(got.rows[0]?.b?.starts_at).getTime() === new Date(at("11:00")).getTime(), got.error?.message);
+
+const overlapSelf = await as("anon", "select public.public_reschedule_booking($1, $2) as r", [APP_TOKEN, at("11:30")]);
+check("remarcar para horário que sobrepõe o próprio atendimento funciona", !overlapSelf.error, overlapSelf.error?.message);
 
 const onTaken = await as("anon", "select public.public_reschedule_booking($1, $2) as r", [APP_TOKEN, at("14:00")]);
 check("remarcar para horário ocupado é recusado", onTaken.error !== null, onTaken.error?.message ?? "remarcou (falha)");
