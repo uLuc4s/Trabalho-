@@ -18,6 +18,7 @@ const MIGRATIONS = [
   "../migrations/20261116000500_funcoes_internas.sql",
   "../migrations/20261116001400_remarcacao_sem_conflito_consigo.sql",
   "../migrations/20261116001600_fecha_escrita_direta.sql",
+  "../migrations/20261116001700_limite_pedidos_de_orcamento.sql",
 ].map((p) => readFileSync(new URL(p, import.meta.url), "utf8"));
 
 const db = new PGlite({ extensions: { btree_gist } }); // banco de teste novo
@@ -102,6 +103,12 @@ check("cliente acompanha o pedido pelo token", track.rows[0]?.r?.status === "new
 // Nome com 1 caractere e telefone curto: recusado.
 const badReq = await as("anon", "select public.public_request_service('oficina-norte', $1, 'A', '123') as r", [SVC]);
 check("pedido com dados inválidos é recusado", badReq.error !== null, badReq.error?.message ?? "aceito (falha)");
+
+// Limite de pedidos por telefone: já há 1 pedido deste telefone. Mais 2 passam (total 3); o 4º é recusado.
+await as("anon", "select public.public_request_service('oficina-norte', $1, 'Ana Lima', '(11) 97777-1234') as r", [SVC]);
+await as("anon", "select public.public_request_service('oficina-norte', $1, 'Ana Lima', '(11) 97777-1234') as r", [SVC]);
+const fourth = await as("anon", "select public.public_request_service('oficina-norte', $1, 'Ana Lima', '(11) 97777-1234') as r", [SVC]);
+check("quarto pedido do mesmo telefone no dia é recusado", fourth.error !== null, fourth.error?.message ?? "aceito (falha)");
 
 // --- Decisão da equipe ---
 // Empresa de outro dono não aprova pedido alheio.
