@@ -7,6 +7,7 @@ import {
   RefreshCw,
   Users,
 } from "lucide-react";
+import { StaggerGroup, StaggerItem } from "@/components/motion/reveal";
 import { SectionHeading } from "./section-heading";
 
 const features = [
@@ -60,20 +61,20 @@ export function Features() {
         description="Uma ferramenta só para agendamento, equipe e operação, pensada para quem atende no balcão e também em campo."
       />
 
-      <div className="mx-auto mt-16 grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <StaggerGroup className="mx-auto mt-16 grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => (
-          <div
+          <StaggerItem
             key={feature.title}
-            className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-6 transition-shadow hover:shadow-dashboard"
+            className="group flex flex-col gap-4 rounded-2xl border border-border bg-background p-6 transition-[box-shadow,transform,border-color] duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-dashboard"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent transition-transform duration-300 group-hover:scale-110">
               <feature.icon className="h-5 w-5" aria-hidden />
             </div>
             <h3 className="font-body text-lg font-semibold tracking-tight text-foreground">{feature.title}</h3>
             <p className="font-body text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
     </section>
   );
 }

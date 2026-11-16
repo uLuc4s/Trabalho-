@@ -1,4 +1,5 @@
 import { Hammer, Scissors, Stethoscope, Wrench } from "lucide-react";
+import { StaggerGroup, StaggerItem } from "@/components/motion/reveal";
 import { SectionHeading } from "./section-heading";
 
 const segments = [
@@ -37,22 +38,22 @@ export function Segments() {
         description="Cada empresa configura os próprios serviços e a própria forma de atender. Não existe um sistema diferente para cada segmento."
       />
 
-      <div className="mx-auto mt-16 grid max-w-6xl gap-4 md:grid-cols-2">
+      <StaggerGroup className="mx-auto mt-16 grid max-w-6xl gap-4 md:grid-cols-2">
         {segments.map((segment) => (
-          <div
+          <StaggerItem
             key={segment.name}
-            className="flex items-start gap-5 rounded-2xl border border-border p-6 transition-colors hover:border-accent/40"
+            className="group flex items-start gap-5 rounded-2xl border border-border p-6 transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:bg-secondary/40"
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground transition-colors duration-300 group-hover:bg-accent group-hover:text-accent-foreground">
               <segment.icon className="h-5 w-5" aria-hidden />
             </div>
             <div className="flex flex-col gap-2">
               <h3 className="font-body text-lg font-semibold tracking-tight">{segment.name}</h3>
               <p className="font-body text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
             </div>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
     </section>
   );
 }

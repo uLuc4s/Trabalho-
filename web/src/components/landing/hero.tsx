@@ -67,7 +67,13 @@ export function Hero() {
         </motion.div>
 
         <motion.div {...fadeUp(30, 0.5, 0.8)} className="mt-8 flex w-full justify-center">
-          <DashboardPreview />
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            className="w-full max-w-5xl"
+          >
+            <DashboardPreview />
+          </motion.div>
         </motion.div>
       </div>
     </section>

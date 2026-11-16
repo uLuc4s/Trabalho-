@@ -1,4 +1,5 @@
 import { ChevronDown } from "lucide-react";
+import { Reveal } from "@/components/motion/reveal";
 import { SectionHeading } from "./section-heading";
 
 const questions = [
@@ -34,10 +35,10 @@ export function Faq() {
       />
 
       <div className="mx-auto mt-12 flex max-w-3xl flex-col gap-3">
-        {questions.map((item) => (
+        {questions.map((item, index) => (
+          <Reveal key={item.q} delay={index * 0.06}>
           <details
-            key={item.q}
-            className="group rounded-2xl border border-border bg-background p-6 open:shadow-dashboard"
+            className="group rounded-2xl border border-border bg-background p-6 transition-shadow duration-300 hover:shadow-dashboard open:shadow-dashboard"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-body text-base font-semibold text-foreground">
               {item.q}
@@ -48,6 +49,7 @@ export function Faq() {
             </summary>
             <p className="mt-3 font-body text-sm leading-relaxed text-muted-foreground">{item.a}</p>
           </details>
+          </Reveal>
         ))}
       </div>
     </section>
