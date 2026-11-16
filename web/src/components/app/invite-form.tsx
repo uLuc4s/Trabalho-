@@ -74,7 +74,12 @@ export function InviteForm({ companyId }: { companyId: string }) {
   // Copia o link para a área de transferência e mostra "Copiado" por 1,8 segundo.
   async function copy() {
     if (!link) return;
-    await navigator.clipboard.writeText(link);
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      setError("Não foi possível copiar. Selecione o link e copie manualmente.");
+      return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   }

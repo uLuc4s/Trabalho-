@@ -29,12 +29,15 @@ export async function getCurrentCompany() {
 
   // Busca o primeiro vínculo ativo do usuário e já traz os dados da empresa.
   // A RLS do banco garante que o usuário só enxerga os próprios vínculos.
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("company_members")
     .select("role, companies(id, name, slug, timezone, business_model, segment)")
     .eq("status", "active")
     .limit(1)
     .maybeSingle();
+
+  // Falha no banco não é "sem empresa": mostra o erro em vez de mandar para o onboarding.
+  if (error) throw new Error("Não foi possível carregar a sua empresa. Recarregue a página.");
 
   // Sem vínculo ativo: o usuário ainda não tem empresa, então vai criar uma.
   if (!data) redirect("/onboarding");

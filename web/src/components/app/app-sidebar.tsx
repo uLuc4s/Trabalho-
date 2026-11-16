@@ -55,7 +55,11 @@ function CopyLink({ slug }: { slug: string }) {
 
   // Copia o endereço completo, ex.: https://site/e/oficina-norte.
   async function copy() {
-    await navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
+    } catch {
+      return; // navegador recusou a área de transferência: não mostra "copiado"
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 1600); // volta ao texto normal depois de 1,6 s
   }
