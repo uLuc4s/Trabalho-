@@ -6,7 +6,8 @@ export default async function ServicosPage() {
 
   const { data: services } = await supabase
     .from("services")
-    .select("id, name, duration_minutes, price, active")
+    .select("id, name, category, description, duration_minutes, price, active")
+    .order("category", { nullsFirst: false })
     .order("name");
 
   return (
@@ -26,9 +27,11 @@ export default async function ServicosPage() {
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
           {services.map((service) => (
             <li key={service.id} className="flex items-center justify-between gap-4 p-5">
-              <div>
+              <div className="min-w-0">
+                {service.category && <p className="text-[11px] uppercase tracking-[0.16em] text-accent">{service.category}</p>}
                 <p className="font-medium">{service.name}</p>
-                <p className="text-sm text-muted-foreground">{service.duration_minutes} min</p>
+                {service.description && <p className="mt-1 text-sm text-muted-foreground">{service.description}</p>}
+                <p className="mt-1 text-xs text-muted-foreground">{service.duration_minutes} min</p>
               </div>
               <div className="text-right text-sm tabular-nums">
                 {service.price !== null ? `R$ ${Number(service.price).toFixed(2).replace(".", ",")}` : "Sob consulta"}

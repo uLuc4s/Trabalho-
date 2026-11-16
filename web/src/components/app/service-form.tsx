@@ -18,6 +18,8 @@ export function ServiceForm({ companyId }: { companyId: string }) {
     const form = event.currentTarget;
     const data = new FormData(form);
     const name = String(data.get("name") ?? "").trim();
+    const category = String(data.get("category") ?? "").trim() || null;
+    const description = String(data.get("description") ?? "").trim() || null;
     const duration = Number(data.get("duration"));
     const priceRaw = String(data.get("price") ?? "").replace(",", ".").trim();
     const price = priceRaw === "" ? null : Number(priceRaw);
@@ -32,6 +34,8 @@ export function ServiceForm({ companyId }: { companyId: string }) {
       const { error: insertError } = await supabase.from("services").insert({
         company_id: companyId,
         name,
+        category,
+        description,
         duration_minutes: duration,
         price,
       });
@@ -49,6 +53,14 @@ export function ServiceForm({ companyId }: { companyId: string }) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="service-name">Nome</Label>
         <Input id="service-name" name="name" placeholder="Corte masculino" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="service-category">Categoria</Label>
+        <Input id="service-category" name="category" placeholder="Cabelo, Barba, Instalação" />
+      </div>
+      <div className="flex flex-col gap-2 md:col-span-3">
+        <Label htmlFor="service-description">Descrição (o que está incluso)</Label>
+        <Input id="service-description" name="description" placeholder="Corte na tesoura ou máquina, finalização com pomada" />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="service-duration">Duração (min)</Label>

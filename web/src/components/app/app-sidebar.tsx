@@ -11,6 +11,7 @@ import {
   Inbox,
   LogOut,
   Scissors,
+  Settings,
   Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -23,6 +24,7 @@ const items = [
   { href: "/app/ordens", label: "Ordens de serviço", icon: ClipboardList },
   { href: "/app/servicos", label: "Serviços", icon: Scissors },
   { href: "/app/equipe", label: "Equipe", icon: Users },
+  { href: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 export function AppSidebar({ companyName }: { companyName: string }) {

@@ -6,7 +6,14 @@ import { AlertCircle, ArrowLeft, Check, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-type Service = { id: string; name: string; duration_minutes: number; price: number | null };
+type Service = {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  duration_minutes: number;
+  price: number | null;
+};
 type Employee = { id: string; display_name: string };
 type Info = { name: string; timezone: string; services: Service[]; employees: Employee[] };
 type Slot = { slot_start: string; slot_employee_id: string };
@@ -171,9 +178,11 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
                 serviceId === item.id ? "border-accent bg-accent/5" : "border-border bg-background",
               )}
             >
-              <span>
+              <span className="min-w-0">
+                {item.category && <span className="block text-[11px] uppercase tracking-[0.16em] text-accent">{item.category}</span>}
                 <span className="block font-medium">{item.name}</span>
-                <span className="text-sm text-muted-foreground">{item.duration_minutes} min</span>
+                {item.description && <span className="mt-1 block text-sm text-muted-foreground">{item.description}</span>}
+                <span className="mt-1 block text-xs text-muted-foreground">{item.duration_minutes} min</span>
               </span>
               <span className="text-sm tabular-nums">{formatPrice(item.price)}</span>
             </button>
