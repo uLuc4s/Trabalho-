@@ -1,35 +1,20 @@
+// Página da agenda do dia e do mês. A consulta fica em services, a conta em mappers e os tipos em dto.
+
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CancelAppointment } from "@/components/app/cancel-appointment";
 import { OutcomeActions } from "@/components/app/outcome-actions";
-import { MonthCalendar, type DayCount } from "@/components/app/month-calendar";
+import { MonthCalendar } from "@/components/app/month-calendar";
+import { cn } from "@/lib/utils";
 import { dayRange, formatTime, getCurrentCompany, todayInSaoPaulo } from "@/lib/company";
+import { getAppointmentsInRange, getMonthStatuses } from "@/services/agenda.service";
+import { buildMonthCounts, first, formatMoney, summarizeDay } from "@/mappers/agenda.mapper";
+import type { AppointmentRowDTO } from "@/dto/agenda.dto";
 
-type Pick<T> = T | T[] | null;
-type Row = {
-  id: string;
-  starts_at: string;
-  ends_at: string;
-  status: string;
-  payment_method: string | null;
-  amount_paid: number | null;
-  details: { placa?: string; veiculo?: string; ano?: string; area?: string } | null;
-  services: Pick<{ name: string; price: number | null }>;
-  employees: Pick<{ display_name: string }>;
-  customers: Pick<{ name: string; phone: string }>;
-};
-
+// Tradução dos códigos de pagamento para o texto da tela.
 const PAYMENT_LABEL: Record<string, string> = { pix: "Pix", cartao: "Cartão", dinheiro: "Dinheiro" };
 
-const first = <T,>(value: Pick<T>): T | undefined => (Array.isArray(value) ? value[0] : value ?? undefined);
-const dayKey = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
-
-function shiftDate(date: string, days: number) {
-  const d = new Date(`${date}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
+// Tradução dos códigos de status para o texto da tela.
 const STATUS_LABEL: Record<string, string> = {
   pending_confirmation: "Aguardando",
   confirmed: "Confirmado",
@@ -38,6 +23,15 @@ const STATUS_LABEL: Record<string, string> = {
   no_show: "Não compareceu",
 };
 
+// Soma ou subtrai dias de uma data AAAA-MM-DD. Usa meio-dia UTC para não cair na virada do dia.
+function shiftDate(date: string, days: number) {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// Entrada: parâmetros da URL (?data=AAAA-MM-DD e ?mes=AAAA-MM).
+// Saída: a tela da agenda.
 export default async function AgendaPage({
   searchParams,
 }: {
@@ -45,37 +39,31 @@ export default async function AgendaPage({
 }) {
   const { data, mes } = await searchParams;
   const today = todayInSaoPaulo();
+  // Usa a data da URL só se estiver no formato certo; senão, usa hoje.
   const date = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : today;
+  // Mês da URL no formato AAAA-MM, ou o mês atual.
   const [year, month] = mes && /^\d{4}-\d{2}$/.test(mes) ? mes.split("-").map(Number) : today.split("-").slice(0, 2).map(Number);
 
   const { supabase, company } = await getCurrentCompany();
+  // Em advocacia e clínica, a agenda não mostra o serviço nem o telefone (sigilo).
   const sensitive = company.segment === "advocacia" || company.segment === "clinica";
-  const range = dayRange(date);
+  const range = dayRange(date); // início e fim do dia
+  // Primeiro instante do mês e do mês seguinte, para o calendário.
   const monthStart = `${year}-${String(month).padStart(2, "0")}-01T00:00:00-03:00`;
   const nextMonth = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`;
   const monthEnd = `${nextMonth}T00:00:00-03:00`;
 
+  // Busca o dia e o mês em paralelo.
   const [{ data: rows, error: rowsError }, { data: monthRows, error: monthError }] = await Promise.all([
-    supabase
-      .from("appointments")
-      .select("id, starts_at, ends_at, status, payment_method, amount_paid, details, services(name, price), employees(display_name), customers(name, phone)")
-      .gte("starts_at", range.start)
-      .lte("starts_at", range.end)
-      .order("starts_at"),
-    supabase.from("appointments").select("starts_at, status").gte("starts_at", monthStart).lt("starts_at", monthEnd),
+    getAppointmentsInRange(supabase, range),
+    getMonthStatuses(supabase, monthStart, monthEnd),
   ]);
 
-  const counts: Record<string, DayCount> = {};
-  for (const row of (monthRows ?? []) as { starts_at: string; status: string }[]) {
-    const key = dayKey(row.starts_at);
-    counts[key] ??= { booked: 0, cancelled: 0 };
-    if (row.status === "cancelled") counts[key].cancelled += 1;
-    else counts[key].booked += 1;
-  }
-
-  const list = (rows ?? []) as Row[];
-  const active = list.filter((r) => r.status !== "cancelled");
-  const expected = active.reduce((sum, r) => sum + Number(first(r.services)?.price ?? 0), 0);
+  // Contagem por dia para o calendário, e resumo do dia para o topo da lista.
+  const counts = buildMonthCounts(monthRows ?? []);
+  const list = (rows ?? []) as AppointmentRowDTO[];
+  const { active: activeCount, expected } = summarizeDay(list);
+  // Data por extenso, ex.: "segunda-feira, 16 de novembro".
   const dayLabel = new Date(`${date}T12:00:00Z`).toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "2-digit",
@@ -91,6 +79,7 @@ export default async function AgendaPage({
           <h1 className="mt-1 font-display text-5xl tracking-tight">Agenda</h1>
         </div>
         <div className="flex items-center gap-2">
+          {/* Navegação entre dias: anterior, hoje e próximo. */}
           <Link
             href={`/app/agenda?data=${shiftDate(date, -1)}`}
             aria-label="Dia anterior"
@@ -114,19 +103,15 @@ export default async function AgendaPage({
         </div>
       </header>
 
-      <MonthCalendar
-        year={year}
-        month={month}
-        counts={counts}
-        selected={date}
-        today={today}
-      />
+      {/* Calendário do mês, com a contagem de cada dia. */}
+      <MonthCalendar year={year} month={month} counts={counts} selected={date} today={today} />
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Atendimentos do dia · {active.length} ativos</h2>
-          {expected > 0 && <p className="text-sm tabular-nums text-muted-foreground">Previsto: R$ {expected.toFixed(2).replace(".", ",")}</p>}
+          <h2 className="text-sm font-medium text-muted-foreground">Atendimentos do dia · {activeCount} ativos</h2>
+          {expected > 0 && <p className="text-sm tabular-nums text-muted-foreground">Previsto: R$ {formatMoney(expected)}</p>}
         </div>
+        {/* Se alguma consulta falhar, mostra o aviso em vez de parecer um dia vazio. */}
         {rowsError || monthError ? (
           <div className="rounded-2xl border border-dashed border-destructive/40 p-10 text-center text-sm text-destructive">
             Não foi possível carregar a agenda. Recarregue a página.
@@ -164,13 +149,13 @@ export default async function AgendaPage({
                       <span className="rounded-full bg-secondary px-3 py-1 text-xs">{STATUS_LABEL[row.status] ?? row.status}</span>
                       {row.status === "completed" && row.payment_method && (
                         <span className="text-xs text-muted-foreground">
-                          {PAYMENT_LABEL[row.payment_method]} · R$ {Number(row.amount_paid ?? 0).toFixed(2).replace(".", ",")}
+                          {PAYMENT_LABEL[row.payment_method]} · R$ {formatMoney(Number(row.amount_paid ?? 0))}
                         </span>
                       )}
                     </div>
                     {(row.status === "confirmed" || row.status === "pending_confirmation") && (
                       <div className="flex flex-col gap-2 md:items-end">
-                        <OutcomeActions appointmentId={row.id} defaultAmount={first(row.services)?.price ?? null} />
+                        <OutcomeActions appointmentId={row.id} defaultAmount={service?.price ?? null} />
                         <CancelAppointment appointmentId={row.id} />
                       </div>
                     )}
@@ -183,8 +168,4 @@ export default async function AgendaPage({
       </section>
     </div>
   );
-}
-
-function cn(...classes: (string | false | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
 }
