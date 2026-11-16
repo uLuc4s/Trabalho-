@@ -43,6 +43,10 @@ Pequenos negócios perdem tempo com mensagens do tipo "tem horário amanhã?" e 
 - Quadro Kanban de tarefas com checklist.
 - Relatórios mensais: receita, formas de pagamento e serviços mais feitos.
 - Configurações da empresa: contato, descrição, formas de pagamento e prazo de cancelamento.
+- Busca global de clientes e serviços pelo menu lateral.
+- Exportação em planilha (CSV) de clientes e de atendimentos do mês, que abre com acentos corretos no Excel.
+- Visão semanal da agenda, além da visão diária e mensal.
+- Avisos de confirmação em cada ação, e confirmação extra quando um atendimento é concluído com valor zero.
 
 ## Tecnologias
 
@@ -116,6 +120,10 @@ npm run dev
 ```
 
 Abra `http://localhost:3000`. Cadastre uma conta, crie a empresa, escolha o modelo e o ramo. O link público fica em `http://localhost:3000/e/seu-endereco`.
+
+## Publicação
+
+O projeto roda na Vercel, com o diretório `web/` como raiz do build. Configure as duas variáveis públicas no projeto da Vercel (`NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) e, no Supabase, adicione o endereço publicado em *Authentication > URL Configuration* (Site URL e Redirect URLs), para que os links de confirmação funcionem.
 
 ## Testes
 

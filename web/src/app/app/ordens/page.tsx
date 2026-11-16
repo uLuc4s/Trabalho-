@@ -1,3 +1,4 @@
+import Link from "next/link";
 // Página de ordens de serviço: lista, veículo, status, ações e histórico de cada ordem.
 // A consulta fica em services, as regras em mappers e os tipos em dto.
 
@@ -35,7 +36,10 @@ export default async function OrdensPage() {
         <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar as ordens. Recarregue a página.</p>
       ) : list.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          Nenhuma ordem ainda. Aprove uma solicitação para abrir a primeira.
+          Nenhuma ordem ainda.{" "}
+          <Link href="/app/solicitacoes" className="font-medium text-foreground underline underline-offset-4">
+            Ver solicitações para aprovar
+          </Link>
         </div>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
