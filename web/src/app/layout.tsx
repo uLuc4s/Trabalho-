@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
+import { MotionProvider } from "@/components/motion/motion-provider";
 
 const display = Instrument_Serif({
   variable: "--font-instrument",
@@ -27,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${display.variable} ${body.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-body">
-        {children}
+        <MotionProvider>{children}</MotionProvider>
       </body>
     </html>
   );
