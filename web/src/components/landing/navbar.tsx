@@ -14,8 +14,12 @@ const links = [
 export function Navbar() {
   return (
     <header className="relative z-40 flex items-center justify-between px-6 py-5 font-body md:px-12 lg:px-20">
-      <Link href="/" className="flex items-center">
-        <Image src="/brand/agendfix-principal.svg" alt="agendfix" width={125} height={28} priority unoptimized />
+      <Link
+        href="/"
+        aria-label="Voltar para o início"
+        className="flex items-center rounded-lg transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Image src="/brand/agendfix-principal.svg" alt="" width={180} height={40} priority unoptimized />
       </Link>
 
       <nav aria-label="Principal" className="hidden items-center gap-8 md:flex">

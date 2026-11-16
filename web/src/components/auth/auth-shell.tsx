@@ -32,8 +32,12 @@ export function AuthShell({
       </Link>
 
       <Reveal y={16} className="relative z-10 mb-8">
-        <Link href="/" className="flex items-center">
-          <Image src="/brand/agendfix-principal.svg" alt="agendfix" width={150} height={34} priority unoptimized />
+        <Link
+          href="/"
+          aria-label="Voltar para o início"
+          className="flex items-center rounded-lg transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Image src="/brand/agendfix-principal.svg" alt="" width={180} height={40} priority unoptimized />
         </Link>
       </Reveal>
 
