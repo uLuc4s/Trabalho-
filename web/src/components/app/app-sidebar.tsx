@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
+  BarChart3,
   CalendarDays,
   Check,
   ClipboardList,
@@ -32,6 +33,7 @@ const items = [
   { href: "/app/servicos", label: "Serviços", icon: Scissors },
   { href: "/app/tarefas", label: "Tarefas", icon: ListTodo },
   { href: "/app/equipe", label: "Equipe", icon: Users },
+  { href: "/app/relatorios", label: "Relatórios", icon: BarChart3 },
   { href: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];
 

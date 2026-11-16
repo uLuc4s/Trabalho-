@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CancelAppointment } from "@/components/app/cancel-appointment";
+import { OutcomeActions } from "@/components/app/outcome-actions";
 import { MonthCalendar, type DayCount } from "@/components/app/month-calendar";
 import { dayRange, formatTime, getCurrentCompany, todayInSaoPaulo } from "@/lib/company";
 
@@ -10,10 +11,14 @@ type Row = {
   starts_at: string;
   ends_at: string;
   status: string;
-  services: Pick<{ name: string }>;
+  payment_method: string | null;
+  amount_paid: number | null;
+  services: Pick<{ name: string; price: number | null }>;
   employees: Pick<{ display_name: string }>;
   customers: Pick<{ name: string; phone: string }>;
 };
+
+const PAYMENT_LABEL: Record<string, string> = { pix: "Pix", cartao: "Cartão", dinheiro: "Dinheiro" };
 
 const first = <T,>(value: Pick<T>): T | undefined => (Array.isArray(value) ? value[0] : value ?? undefined);
 const dayKey = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
@@ -51,7 +56,7 @@ export default async function AgendaPage({
   const [{ data: rows }, { data: monthRows }] = await Promise.all([
     supabase
       .from("appointments")
-      .select("id, starts_at, ends_at, status, services(name), employees(display_name), customers(name, phone)")
+      .select("id, starts_at, ends_at, status, payment_method, amount_paid, services(name, price), employees(display_name), customers(name, phone)")
       .gte("starts_at", range.start)
       .lte("starts_at", range.end)
       .order("starts_at"),
@@ -137,9 +142,21 @@ export default async function AgendaPage({
                       {service?.name} · {employee?.display_name} · {customer?.phone}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="rounded-full bg-secondary px-3 py-1 text-xs">{STATUS_LABEL[row.status] ?? row.status}</span>
-                    {!cancelled && <CancelAppointment appointmentId={row.id} />}
+                  <div className="flex flex-col items-start gap-2 md:items-end">
+                    <div className="flex items-center gap-3">
+                      <span className="rounded-full bg-secondary px-3 py-1 text-xs">{STATUS_LABEL[row.status] ?? row.status}</span>
+                      {row.status === "completed" && row.payment_method && (
+                        <span className="text-xs text-muted-foreground">
+                          {PAYMENT_LABEL[row.payment_method]} · R$ {Number(row.amount_paid ?? 0).toFixed(2).replace(".", ",")}
+                        </span>
+                      )}
+                    </div>
+                    {(row.status === "confirmed" || row.status === "pending_confirmation") && (
+                      <div className="flex flex-col gap-2 md:items-end">
+                        <OutcomeActions appointmentId={row.id} defaultAmount={first(row.services)?.price ?? null} />
+                        <CancelAppointment appointmentId={row.id} />
+                      </div>
+                    )}
                   </div>
                 </li>
               );

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { ForgetCustomer } from "@/components/app/forget-customer";
 import { formatDateTime, getCurrentCompany } from "@/lib/company";
 
 export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q } = await searchParams;
   const term = (q ?? "").trim().toLowerCase();
-  const { supabase } = await getCurrentCompany();
+  const { supabase, role } = await getCurrentCompany();
+  const canManage = role === "owner" || role === "admin";
 
   const [{ data: customers }, { data: appointments }] = await Promise.all([
     supabase.from("customers").select("id, name, phone, email").order("name"),
@@ -68,9 +70,12 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
                     {s?.last ? `Último: ${formatDateTime(s.last)}` : "Sem atendimento ainda"}
                   </p>
                 </div>
-                <Link href={`/app/agenda?data=${s?.last ? s.last.slice(0, 10) : ""}`} className="text-sm text-muted-foreground transition-colors hover:text-foreground md:text-right">
-                  Ver agenda
-                </Link>
+                <div className="flex items-center gap-3 md:justify-end">
+                  <Link href={`/app/agenda?data=${s?.last ? s.last.slice(0, 10) : ""}`} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    Ver agenda
+                  </Link>
+                  {canManage && <ForgetCustomer customerId={c.id} />}
+                </div>
               </li>
             );
           })}
