@@ -31,6 +31,15 @@ export default async function OrdensPage() {
 
   const list = (rows ?? []) as Row[];
 
+  const { data: linked } = await supabase
+    .from("appointments")
+    .select("work_order_id, details")
+    .not("work_order_id", "is", null);
+  const vehicleByOrder = new Map<string, { placa?: string; veiculo?: string; ano?: string }>();
+  for (const a of (linked ?? []) as { work_order_id: string; details: { placa?: string; veiculo?: string; ano?: string } | null }[]) {
+    if (a.details?.placa) vehicleByOrder.set(a.work_order_id, a.details);
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -53,6 +62,11 @@ export default async function OrdensPage() {
                   <p className="text-sm text-muted-foreground">
                     {customer?.name} · aberta em {formatDateTime(row.created_at)}
                   </p>
+                  {vehicleByOrder.get(row.id) && (
+                    <p className="mt-1 text-sm">
+                      Veículo: {vehicleByOrder.get(row.id)?.veiculo} {vehicleByOrder.get(row.id)?.ano ? `(${vehicleByOrder.get(row.id)?.ano})` : ""} · Placa {vehicleByOrder.get(row.id)?.placa}
+                    </p>
+                  )}
                   <span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-xs">
                     {STATUS_LABEL[row.status] ?? row.status}
                   </span>
