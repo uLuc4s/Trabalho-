@@ -98,13 +98,13 @@ export function Spotlight({
   }
 
   return (
-    <div ref={ref} onPointerMove={handleMove} className={`group relative overflow-hidden ${className ?? ""}`}>
+    <div ref={ref} onPointerMove={handleMove} className="group relative overflow-hidden">
       <motion.div
         aria-hidden
         style={{ background }}
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
       />
-      <div className="relative">{children}</div>
+      <div className={`relative ${className ?? ""}`}>{children}</div>
     </div>
   );
 }
