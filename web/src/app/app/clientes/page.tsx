@@ -76,6 +76,9 @@ export default async function ClientesPage({
         >
           Sem retorno há 30 dias
         </Link>
+        <Link href="/app/exportar/clientes" className="ml-auto rounded-full border border-border px-4 py-1.5 text-muted-foreground transition-colors hover:bg-secondary">
+          Exportar planilha
+        </Link>
       </div>
 
       {/* Aviso se alguma consulta falhar, em vez de parecer uma lista vazia. */}

@@ -1,6 +1,7 @@
 // Página de relatórios do mês: receita, contagens e gráficos.
 // A consulta fica em services, as contas em mappers e os tipos em dto.
 
+import Link from "next/link";
 import { BarChart } from "@/components/app/charts";
 import { getCurrentCompany, todayInSaoPaulo } from "@/lib/company";
 import { getMonthAppointments } from "@/services/relatorios.service";
@@ -30,6 +31,9 @@ export default async function RelatoriosPage() {
       <header>
         <h1 className="font-display text-5xl tracking-tight">Relatórios</h1>
         <p className="mt-2 text-sm text-muted-foreground">Mês atual. {report.pending} atendimentos ainda aguardam fechamento.</p>
+        <Link href="/app/exportar/atendimentos" className="mt-4 inline-block rounded-full border border-border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary">
+          Exportar atendimentos do mês
+        </Link>
       </header>
 
       {/* Aviso se a consulta falhar, em vez de mostrar zeros como se fossem reais. */}

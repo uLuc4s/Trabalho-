@@ -3,6 +3,7 @@
 import { AppSidebar } from "@/components/app/app-sidebar"; // menu lateral e menu do celular
 import { redirect } from "next/navigation"; // redireciona para outra rota no servidor
 import { getCurrentCompany } from "@/lib/company"; // descobre a empresa e o papel do usuário logado
+import { ToastProvider } from "@/components/ui/toast"; // avisos de sucesso e erro
 
 // Entrada: a página filha (children) que está sendo acessada.
 // Saída: a página dentro da moldura do painel.
@@ -19,7 +20,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Menu lateral com o nome da empresa, o modelo (para esconder itens) e o link público. */}
       <AppSidebar companyName={company.name} slug={company.slug} model={company.business_model} />
       {/* Área principal: o conteúdo da página atual. min-w-0 deixa a tabela encolher sem estourar a tela. */}
-      <main className="min-w-0 flex-1 p-6 md:p-10">{children}</main>
+      <main className="min-w-0 flex-1 p-6 md:p-10">
+        <ToastProvider>{children}</ToastProvider>
+      </main>
     </div>
   );
 }

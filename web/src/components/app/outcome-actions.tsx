@@ -7,6 +7,7 @@ import { useState, useTransition } from "react"; // estado local e transição (
 import { Check, Loader2, UserX } from "lucide-react"; // ícones
 import { createClient } from "@/lib/supabase/client"; // cliente do navegador para chamar a função do banco
 import { cn } from "@/lib/utils"; // junta classes CSS
+import { useToast } from "@/components/ui/toast"; // aviso de sucesso ou erro
 
 // Formas de pagamento aceitas, com o texto que aparece no botão.
 const METHODS = [
@@ -25,11 +26,20 @@ export function OutcomeActions({ appointmentId, defaultAmount }: { appointmentId
   // Valor inicial: o preço do serviço, se houver. Vazio se for sob consulta.
   const [amount, setAmount] = useState(defaultAmount !== null ? String(defaultAmount) : "");
   const [error, setError] = useState<string | null>(null); // mensagem de erro para mostrar
+  const [zeroOk, setZeroOk] = useState(false); // true depois que o usuário confirma valor zero
+  const { notify } = useToast();
 
   // Chama a função do banco que fecha o atendimento.
   // Entrada: situação (concluído ou falta), forma de pagamento e valor (null para falta).
   // Saída: atualiza a tela; se der erro, mostra a mensagem.
   function send(status: "completed" | "no_show", payment: string | null, value: number | null) {
+    // Valor zero em atendimento concluído pede confirmação: evita fechar sem cobrar por engano.
+    if (status === "completed" && value === 0 && !zeroOk) {
+      setZeroOk(true);
+      setError("Valor zero. Clique de novo para confirmar que não houve cobrança.");
+      return;
+    }
+    setZeroOk(false);
     setError(null);
     startTransition(async () => {
       const { error: rpcError } = await createClient().rpc("app_set_appointment_outcome", {
@@ -40,8 +50,10 @@ export function OutcomeActions({ appointmentId, defaultAmount }: { appointmentId
       });
       if (rpcError) {
         setError(rpcError.message);
+        notify("Não foi possível salvar o fechamento.", "error");
         return;
       }
+      notify(status === "completed" ? "Atendimento concluído" : "Falta registrada");
       router.refresh(); // recarrega os dados da página com o novo status
     });
   }

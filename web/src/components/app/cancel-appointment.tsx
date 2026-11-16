@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"; // para atualizar a tela depois de 
 import { useState, useTransition } from "react"; // estado e transição de carregamento
 import { Loader2, X } from "lucide-react"; // ícones de carregamento e de cancelar
 import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { useToast } from "@/components/ui/toast"; // aviso de sucesso ou erro
 
 // Entrada: id do atendimento.
 // Saída: botão "Cancelar". Mostra erro embaixo se o banco recusar.
@@ -13,6 +14,7 @@ export function CancelAppointment({ appointmentId }: { appointmentId: string }) 
   const router = useRouter();
   const [pending, startTransition] = useTransition(); // true enquanto cancela
   const [error, setError] = useState<string | null>(null);
+  const { notify } = useToast();
 
   // Chama a função do banco que cancela o atendimento.
   function cancel() {
@@ -22,8 +24,10 @@ export function CancelAppointment({ appointmentId }: { appointmentId: string }) 
       const { error: rpcError } = await supabase.rpc("app_cancel_appointment", { p_appointment_id: appointmentId });
       if (rpcError) {
         setError(rpcError.message);
+        notify("Não foi possível cancelar.", "error");
         return;
       }
+      notify("Atendimento cancelado");
       router.refresh(); // o atendimento some das ativas e fica cancelado na lista
     });
   }
