@@ -31,6 +31,7 @@ await db.exec(`
   grant execute on all functions in schema auth to anon, authenticated;
 `);
 await db.exec(readFileSync(MIGRATION, "utf8"));
+await db.exec(readFileSync(new URL("../migrations/20261116000400_membro_ve_propria_linha.sql", import.meta.url), "utf8"));
 await db.exec(`
   grant usage on schema public to anon, authenticated;
   grant select, insert, update, delete on all tables in schema public to authenticated;
@@ -143,6 +144,9 @@ check("membro com papel 'member' cria agendamento", !memberCreateAppt.error, mem
 
 const bad = await db.query("insert into public.customers (company_id, name, phone) values ($1, 'x', '123')", [COMP1]).then(() => "aceito", (e) => "bloqueado");
 check("telefone inválido é bloqueado pelo banco", bad === "bloqueado");
+
+const ownRow = await as("invitee", "select company_id from public.company_members where user_id = (select auth.uid())");
+check("membro enxerga a própria linha de vínculo", ownRow.rows.length >= 1, `rows=${ownRow.rows.length}`);
 
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} verificações passaram`);
