@@ -1,11 +1,15 @@
+// Página do cliente para consultar, remarcar ou cancelar um agendamento, usando o link recebido (?token=).
+// Não exige login: o token é a única credencial.
+// ATENÇÃO: o token fica na URL e pode aparecer em histórico e logs de acesso.
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
+import { useRouter, useSearchParams } from "next/navigation"; // lê a URL e navega
+import { Suspense, useEffect, useMemo, useState, useTransition } from "react"; // estado e efeitos
+import { AlertCircle, Loader2 } from "lucide-react"; // ícones
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { cn } from "@/lib/utils"; // junta classes CSS
 
+// Dados do agendamento, como a função public_get_booking devolve.
 type Booking = {
   status: string;
   starts_at: string;
@@ -16,10 +20,12 @@ type Booking = {
   employee_id: string;
   company: string;
   company_slug: string;
-  cancellable: boolean;
+  cancellable: boolean; // true se ainda está ativo e dentro do prazo
 };
+// Horário livre devolvido pelo banco.
 type Slot = { slot_start: string; slot_employee_id: string };
 
+// Texto de cada situação do agendamento.
 const STATUS: Record<string, string> = {
   pending_confirmation: "Aguardando confirmação",
   confirmed: "Confirmado",
@@ -28,17 +34,24 @@ const STATUS: Record<string, string> = {
   no_show: "Não compareceu",
 };
 
+// Quantos dias à frente o cliente pode escolher na remarcação.
 const DAYS = 14;
+// Data no formato AAAA-MM-DD, no fuso de São Paulo.
 const isoDate = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+// Só a hora, ex.: "09:30".
 const timeLabel = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 
+// Remarcação: escolhe um novo dia e horário com o mesmo profissional e serviço.
+// Entrada: token, dados do agendamento e a função chamada quando remarca com sucesso.
+// Saída: seleção de dia e horário, e o botão de confirmar.
 function Reschedule({ token, booking, onDone }: { token: string; booking: Booking; onDone: (startsAt: string) => void }) {
-  const [date, setDate] = useState<string | null>(null);
-  const [slots, setSlots] = useState<Slot[] | null>(null);
-  const [chosen, setChosen] = useState<Slot | null>(null);
+  const [date, setDate] = useState<string | null>(null); // dia escolhido
+  const [slots, setSlots] = useState<Slot[] | null>(null); // horários livres; null = carregando
+  const [chosen, setChosen] = useState<Slot | null>(null); // horário escolhido
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition(); // true enquanto remarca
 
+  // Próximos 14 dias, começando amanhã. Calculado uma vez.
   const days = useMemo(() => {
     const base = new Date();
     return Array.from({ length: DAYS }, (_, i) => {
@@ -48,6 +61,8 @@ function Reschedule({ token, booking, onDone }: { token: string; booking: Bookin
     });
   }, []);
 
+  // Ao escolher um dia, busca os horários livres do mesmo profissional.
+  // A flag "active" descarta respostas antigas se o usuário trocar de dia rápido.
   useEffect(() => {
     if (!date) return;
     let active = true;
@@ -56,7 +71,7 @@ function Reschedule({ token, booking, onDone }: { token: string; booking: Bookin
         p_slug: booking.company_slug,
         p_service_id: booking.service_id,
         p_date: date,
-        p_employee_id: booking.employee_id,
+        p_employee_id: booking.employee_id, // mantém o mesmo profissional
       })
       .then(({ data, error: rpcError }) => {
         if (!active) return;
@@ -73,6 +88,7 @@ function Reschedule({ token, booking, onDone }: { token: string; booking: Bookin
     };
   }, [date, booking.company_slug, booking.service_id, booking.employee_id]);
 
+  // Grava a nova data pelo banco. Se outra pessoa pegou o horário, explica.
   function confirm() {
     if (!chosen) return;
     setError(null);
@@ -92,6 +108,7 @@ function Reschedule({ token, booking, onDone }: { token: string; booking: Bookin
   return (
     <div className="flex flex-col gap-4 border-t border-border pt-6">
       <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Novo dia</p>
+      {/* Faixa de dias. Rola na horizontal no celular. */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {days.map((d) => {
           const key = isoDate(d);
@@ -116,6 +133,7 @@ function Reschedule({ token, booking, onDone }: { token: string; booking: Bookin
         })}
       </div>
 
+      {/* Estados da lista de horários: carregando, vazio ou a grade. */}
       {date && slots === null && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden />}
       {date && slots && slots.length === 0 && <p className="text-sm text-muted-foreground">Sem horário livre neste dia.</p>}
       {slots && slots.length > 0 && (
@@ -146,6 +164,7 @@ function Reschedule({ token, booking, onDone }: { token: string; booking: Bookin
         </p>
       )}
 
+      {/* Só libera quando há um horário escolhido e nada está sendo gravado. */}
       <button
         type="button"
         onClick={confirm}
@@ -159,15 +178,17 @@ function Reschedule({ token, booking, onDone }: { token: string; booking: Bookin
   );
 }
 
+// Tela principal da consulta: carrega o agendamento pelo token e oferece remarcar ou cancelar.
 function Consulta() {
-  const params = useSearchParams();
+  const params = useSearchParams(); // parâmetros da URL
   const router = useRouter();
-  const token = params.get("token") ?? "";
+  const token = params.get("token") ?? ""; // token do link, ou vazio
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [editing, setEditing] = useState(false); // true quando a remarcação está aberta
+  const [pending, startTransition] = useTransition(); // true enquanto cancela
 
+  // Busca o agendamento assim que o token chega. Se der erro, mostra mensagem.
   useEffect(() => {
     if (!token) return;
     let active = true;
@@ -186,6 +207,7 @@ function Consulta() {
     };
   }, [token]);
 
+  // Cancela o agendamento pelo token e atualiza a tela na hora.
   function cancel() {
     setError(null);
     startTransition(async () => {
@@ -199,10 +221,12 @@ function Consulta() {
     });
   }
 
+  // Sem token: link incompleto. Erro sem dados: mostra só o erro. Carregando: spinner.
   if (!token) return <p className="text-sm text-destructive">Link incompleto.</p>;
   if (error && !booking) return <p className="text-sm text-destructive">{error}</p>;
   if (!booking) return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />;
 
+  // Data por extenso no fuso de São Paulo.
   const when = new Date(booking.starts_at).toLocaleString("pt-BR", {
     weekday: "long",
     day: "2-digit",
@@ -230,6 +254,7 @@ function Consulta() {
         </p>
       )}
 
+      {/* Botões de remarcar e cancelar: só aparecem se ainda for possível. */}
       {booking.cancellable && !editing && (
         <div className="flex flex-wrap gap-3">
           <button
@@ -265,6 +290,7 @@ function Consulta() {
   );
 }
 
+// Página da rota. O Suspense é exigido pelo Next para useSearchParams em páginas estáticas.
 export default function ConsultaPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
