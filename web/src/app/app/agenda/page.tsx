@@ -47,7 +47,8 @@ export default async function AgendaPage({
   const date = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : today;
   const [year, month] = mes && /^\d{4}-\d{2}$/.test(mes) ? mes.split("-").map(Number) : today.split("-").slice(0, 2).map(Number);
 
-  const { supabase } = await getCurrentCompany();
+  const { supabase, company } = await getCurrentCompany();
+  const sensitive = company.segment === "advocacia" || company.segment === "clinica";
   const range = dayRange(date);
   const monthStart = `${year}-${String(month).padStart(2, "0")}-01T00:00:00-03:00`;
   const nextMonth = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`;
@@ -139,7 +140,8 @@ export default async function AgendaPage({
                   <div className="min-w-0">
                     <p className={cn("truncate font-medium", cancelled && "text-muted-foreground line-through")}>{customer?.name}</p>
                     <p className="truncate text-sm text-muted-foreground">
-                      {service?.name} · {employee?.display_name} · {customer?.phone}
+                      {sensitive ? "Atendimento" : service?.name} · {employee?.display_name}
+                      {!sensitive && ` · ${customer?.phone}`}
                     </p>
                   </div>
                   <div className="flex flex-col items-start gap-2 md:items-end">

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Loader2, Repeat, Ruler, Scissors, Truck, type LucideIcon } from "lucide-react";
 import { BUSINESS_MODELS } from "@/lib/business-models";
+import { SEGMENTS, type Segment } from "@/lib/business-segments";
 import type { BusinessModel } from "@/lib/company";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ const ICONS: Record<BusinessModel, LucideIcon> = {
 export function ModelPicker({ companyId, hasServices }: { companyId: string; hasServices: boolean }) {
   const router = useRouter();
   const [selected, setSelected] = useState<BusinessModel | null>(null);
+  const [segment, setSegment] = useState<Segment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -28,7 +30,7 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
       const supabase = createClient();
       const { error: updateError } = await supabase
         .from("companies")
-        .update({ business_model: selected })
+        .update({ business_model: selected, segment })
         .eq("id", companyId);
       if (updateError) {
         setError("Não foi possível salvar. Tente de novo.");
@@ -36,11 +38,11 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
       }
 
       if (!hasServices) {
+        const segmentServices = SEGMENTS.find((s) => s.id === segment)?.services ?? [];
         const model = BUSINESS_MODELS.find((m) => m.id === selected);
-        if (model) {
-          await supabase.from("services").insert(
-            model.services.map((s) => ({ ...s, company_id: companyId })),
-          );
+        const examples = segmentServices.length > 0 ? segmentServices : (model?.services ?? []);
+        if (examples.length > 0) {
+          await supabase.from("services").insert(examples.map((s) => ({ ...s, company_id: companyId })));
         }
       }
 
@@ -86,12 +88,32 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
+      <div className="flex flex-col gap-3">
+        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Qual é o seu ramo?</p>
+        <div className="flex flex-wrap gap-2">
+          {SEGMENTS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setSegment(s.id)}
+              aria-pressed={segment === s.id}
+              className={cn(
+                "rounded-full border px-4 py-2 text-sm transition-all duration-200",
+                segment === s.id ? "border-accent bg-accent/10" : "border-border hover:bg-secondary",
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">Você pode trocar isso depois em Configurações.</p>
         <button
           type="button"
           onClick={confirm}
-          disabled={!selected || pending}
+          disabled={!selected || !segment || pending}
           className="flex h-11 items-center gap-2 rounded-full bg-accent px-6 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90 disabled:opacity-40"
         >
           {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
