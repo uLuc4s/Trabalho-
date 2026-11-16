@@ -1,6 +1,8 @@
 // Página da agenda do dia e do mês. A consulta fica em services, a conta em mappers e os tipos em dto.
 
+import { Suspense } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CancelAppointment } from "@/components/app/cancel-appointment";
 import { OutcomeActions } from "@/components/app/outcome-actions";
@@ -32,11 +34,26 @@ function shiftDate(date: string, days: number) {
 
 // Entrada: parâmetros da URL (?data=AAAA-MM-DD e ?mes=AAAA-MM).
 // Saída: a tela da agenda.
-export default async function AgendaPage({
+// Página da rota. O conteúdo fica em Suspense porque depende da requisição (data e parâmetros).
+export default function AgendaPage({
   searchParams,
 }: {
   searchParams: Promise<{ data?: string; mes?: string }>;
 }) {
+  return (
+    <Suspense fallback={null}>
+      <AgendaContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function AgendaContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ data?: string; mes?: string }>;
+}) {
+  // Avisa o Next que a página depende da requisição (data de hoje e parâmetros).
+  await connection();
   const { data, mes } = await searchParams;
   const today = todayInSaoPaulo();
   // Usa a data da URL só se estiver no formato certo; senão, usa hoje.

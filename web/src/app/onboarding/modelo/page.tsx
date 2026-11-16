@@ -5,6 +5,9 @@ import { ModelPicker } from "@/components/onboarding/model-picker"; // seletor d
 import { getCurrentCompany } from "@/lib/company"; // empresa e papel do usuário logado
 
 // Monta a página do passo 2.
+// Depende da requisição (banco e sessão): bloqueia no servidor em vez de pré-renderizar.
+export const instant = false;
+
 export default async function ModeloPage() {
   const { supabase, company } = await getCurrentCompany();
   // Já escolheu: não precisa estar aqui.

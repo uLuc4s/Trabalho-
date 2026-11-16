@@ -31,6 +31,9 @@ const PAYMENT_LABEL: Record<string, string> = { pix: "Pix", cartao: "Cartão", d
 
 // Entrada: slug da empresa, vindo da URL.
 // Saída: a página pública, ou 404 se a empresa não for encontrada.
+// Depende da requisição (banco e sessão): bloqueia no servidor em vez de pré-renderizar.
+export const instant = false;
+
 export default async function PublicBookingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params; // a URL chega como promessa no Next 16
   const supabase = await createClient();

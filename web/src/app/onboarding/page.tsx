@@ -6,6 +6,9 @@ import { OnboardingForm } from "@/components/auth/onboarding-form"; // formulár
 import { createClient } from "@/lib/supabase/server"; // cliente do servidor com a sessão
 
 // Monta a página do passo 1.
+// Depende da requisição (banco e sessão): bloqueia no servidor em vez de pré-renderizar.
+export const instant = false;
+
 export default async function OnboardingPage() {
   const supabase = await createClient();
   // Procura um vínculo ativo: se já existe, não precisa criar empresa de novo.

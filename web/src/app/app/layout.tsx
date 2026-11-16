@@ -6,6 +6,9 @@ import { getCurrentCompany } from "@/lib/company"; // descobre a empresa e o pap
 
 // Entrada: a página filha (children) que está sendo acessada.
 // Saída: a página dentro da moldura do painel.
+// Área logada: depende da sessão do usuário, então bloqueia no servidor em vez de pré-renderizar.
+export const instant = false;
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { company, role } = await getCurrentCompany();
   // Dono ou admin sem modelo de negócio é levado para escolher. Outros papéis seguem sem redirecionar.
