@@ -6,54 +6,50 @@ const segments = [
   {
     icon: Scissors,
     name: "Barbearias e salões",
-    text: "Horários livres a cada 30 minutos, vários profissionais e clientes que cancelam pelo próprio link.",
+    text: "Horário a cada 30 minutos, vários profissionais e cancelamento pelo próprio link.",
   },
   {
     icon: Stethoscope,
-    name: "Clínicas e consultórios",
-    text: "Agenda por profissional, bloqueio de horários e confirmação antes do atendimento.",
+    name: "Clínicas",
+    text: "Agenda por profissional, bloqueio de horário e lista do dia para a recepção.",
   },
   {
     icon: Wrench,
     name: "Assistência técnica",
-    text: "Visitas agendadas, ordem de serviço com responsável e histórico de cada atendimento.",
+    text: "Visitas marcadas, ordem de serviço com responsável e histórico do atendimento.",
   },
   {
     icon: Hammer,
     name: "Instalação e manutenção",
-    text: "Solicitações de orçamento, visita técnica marcada e acompanhamento do serviço até a conclusão.",
+    text: "Pedido de orçamento, visita técnica agendada e acompanhamento até o fim.",
   },
 ];
 
 export function Segments() {
   return (
-    <section id="segmentos" className="px-6 py-24 md:px-12 lg:px-20">
-      <SectionHeading
-        eyebrow="Para quem é"
-        title={
-          <>
-            Um sistema, <em className="italic">vários</em> tipos de negócio
-          </>
-        }
-        description="Cada empresa configura os próprios serviços e a própria forma de atender. Não existe um sistema diferente para cada segmento."
-      />
+    <section id="segmentos" className="px-6 py-28 md:px-12 lg:px-20">
+      <div className="mx-auto max-w-6xl">
+        <SectionHeading
+          eyebrow="Para quem é"
+          title="Serve para quem marca horário"
+          description="Cada empresa configura os próprios serviços e a forma de atender."
+        />
 
-      <StaggerGroup className="mx-auto mt-16 grid max-w-6xl gap-4 md:grid-cols-2">
-        {segments.map((segment) => (
-          <StaggerItem
-            key={segment.name}
-            className="group flex items-start gap-5 rounded-2xl border border-border p-6 transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:bg-secondary/40"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground transition-colors duration-300 group-hover:bg-accent group-hover:text-accent-foreground">
-              <segment.icon className="h-5 w-5" aria-hidden />
-            </div>
-            <div className="flex flex-col gap-2">
-              <h3 className="font-body text-lg font-semibold tracking-tight">{segment.name}</h3>
-              <p className="font-body text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
-            </div>
-          </StaggerItem>
-        ))}
-      </StaggerGroup>
+        <StaggerGroup className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2">
+          {segments.map((segment) => (
+            <StaggerItem
+              key={segment.name}
+              className="group flex gap-5 bg-background p-7 transition-colors hover:bg-secondary/40"
+            >
+              <segment.icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-accent" aria-hidden />
+              <div>
+                <h3 className="font-body text-base font-semibold text-foreground">{segment.name}</h3>
+                <p className="mt-1.5 font-body text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerGroup>
+      </div>
     </section>
   );
 }

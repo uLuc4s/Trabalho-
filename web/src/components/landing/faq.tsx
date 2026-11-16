@@ -4,53 +4,49 @@ import { SectionHeading } from "./section-heading";
 
 const questions = [
   {
-    q: "Meu cliente precisa criar conta para agendar?",
-    a: "Não. Ele escolhe o serviço, o profissional e o horário e informa nome e telefone. Não existe cadastro nem aplicativo para instalar.",
+    q: "O cliente precisa criar conta?",
+    a: "Não. Ele escolhe o serviço, o profissional e o horário, e informa nome e telefone.",
   },
   {
-    q: "Como a agenda evita horários repetidos?",
-    a: "A regra de conflito fica no próprio banco de dados. Mesmo que duas pessoas tentem o mesmo horário ao mesmo tempo, só uma consegue confirmar.",
+    q: "E se dois clientes escolherem o mesmo horário?",
+    a: "Só um confirma. A regra de conflito fica no banco de dados, não só na tela.",
   },
   {
-    q: "Cada profissional vê só a própria agenda?",
-    a: "Sim. Cada pessoa vê a agenda dela, e o dono ou o administrador vê todas as agendas juntas.",
+    q: "Cada profissional vê a agenda de todo mundo?",
+    a: "Não. Cada pessoa vê a própria agenda. O dono ou o administrador vê todas.",
   },
   {
-    q: "Meus dados e os dos meus clientes estão protegidos?",
-    a: "Cada empresa acessa somente os próprios dados. Essa separação é aplicada pelo banco de dados, e não só pela tela.",
+    q: "Os dados de cada empresa ficam separados?",
+    a: "Sim. Cada empresa acessa somente os próprios dados, e isso é garantido pelo banco.",
   },
 ];
 
 export function Faq() {
   return (
-    <section id="perguntas" className="bg-secondary/40 px-6 py-24 md:px-12 lg:px-20">
-      <SectionHeading
-        eyebrow="Perguntas frequentes"
-        title={
-          <>
-            Antes de <em className="italic">começar</em>
-          </>
-        }
-        description="As dúvidas mais comuns de quem está pensando em organizar a agenda."
-      />
+    <section id="perguntas" className="border-t border-border px-6 py-28 md:px-12 lg:px-20">
+      <div className="mx-auto grid max-w-6xl gap-16 lg:grid-cols-[1fr_1.4fr] lg:gap-24">
+        <SectionHeading
+          eyebrow="Dúvidas"
+          title="Perguntas frequentes"
+          description="Se a sua não estiver aqui, a gente responde pelo e-mail de contato."
+        />
 
-      <div className="mx-auto mt-12 flex max-w-3xl flex-col gap-3">
-        {questions.map((item, index) => (
-          <Reveal key={item.q} delay={index * 0.06}>
-          <details
-            className="group rounded-2xl border border-border bg-background p-6 transition-shadow duration-300 hover:shadow-dashboard open:shadow-dashboard"
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-body text-base font-semibold text-foreground">
-              {item.q}
-              <ChevronDown
-                className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
-                aria-hidden
-              />
-            </summary>
-            <p className="mt-3 font-body text-sm leading-relaxed text-muted-foreground">{item.a}</p>
-          </details>
-          </Reveal>
-        ))}
+        <div className="divide-y divide-border border-y border-border">
+          {questions.map((item, index) => (
+            <Reveal key={item.q} delay={index * 0.05}>
+              <details className="group py-6">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-body text-base font-medium text-foreground">
+                  {item.q}
+                  <ChevronDown
+                    className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+                <p className="mt-3 max-w-prose font-body text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+              </details>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </section>
   );

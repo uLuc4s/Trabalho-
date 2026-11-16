@@ -1,56 +1,46 @@
-import { Building2, LayoutDashboard, Share2 } from "lucide-react";
-import { StaggerGroup, StaggerItem } from "@/components/motion/reveal";
 import { SectionHeading } from "./section-heading";
+import { Reveal } from "@/components/motion/reveal";
 
 const steps = [
   {
-    icon: Building2,
-    title: "Cadastre sua empresa",
-    text: "Informe o nome, escolha o endereço público e cadastre os serviços e a duração de cada um.",
+    title: "Cadastre a empresa",
+    text: "Nome, endereço público e a lista de serviços com a duração de cada um.",
   },
   {
-    icon: Share2,
-    title: "Compartilhe o link",
-    text: "Coloque o link na bio, no Google ou no WhatsApp. Seus clientes agendam sozinhos, a qualquer hora.",
+    title: "Coloque o link onde seu cliente já está",
+    text: "Bio do Instagram, Google ou WhatsApp. O agendamento funciona sozinho.",
   },
   {
-    icon: LayoutDashboard,
-    title: "Acompanhe o dia",
-    text: "A agenda, a equipe e as tarefas ficam no painel. Cada atendimento aparece na agenda de quem vai executar.",
+    title: "Acompanhe o dia no painel",
+    text: "Agenda, equipe e tarefas. Cada atendimento cai na agenda de quem vai fazer.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="como-funciona" className="bg-secondary/40 px-6 py-24 md:px-12 lg:px-20">
-      <SectionHeading
-        eyebrow="Como funciona"
-        title={
-          <>
-            Três passos para <em className="italic">começar</em>
-          </>
-        }
-        description="Você não precisa de instalação nem de treinamento longo. Em minutos a agenda já está pronta para receber clientes."
-      />
+    <section id="como-funciona" className="border-y border-border bg-secondary/30 px-6 py-28 md:px-12 lg:px-20">
+      <div className="mx-auto grid max-w-6xl gap-16 lg:grid-cols-[1fr_1.2fr] lg:gap-24">
+        <SectionHeading
+          eyebrow="Como funciona"
+          title="Da conta ao primeiro agendamento"
+          description="Não tem instalação nem treinamento. Dá para começar no mesmo dia."
+        />
 
-      <StaggerGroup as="ol" className="mx-auto mt-16 grid max-w-5xl gap-6 md:grid-cols-3">
-        {steps.map((step, index) => (
-          <StaggerItem
-            key={step.title}
-            as="li"
-            className="group flex flex-col gap-5 rounded-2xl bg-background p-8 shadow-dashboard transition-transform duration-300 hover:-translate-y-1"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-accent-foreground transition-transform duration-300 group-hover:rotate-6">
-                <step.icon className="h-5 w-5" aria-hidden />
-              </div>
-              <span className="font-display text-3xl text-muted-foreground">0{index + 1}</span>
-            </div>
-            <h3 className="font-body text-lg font-semibold tracking-tight">{step.title}</h3>
-            <p className="font-body text-sm leading-relaxed text-muted-foreground">{step.text}</p>
-          </StaggerItem>
-        ))}
-      </StaggerGroup>
+        <ol className="relative flex flex-col gap-10 border-l border-border pl-8">
+          {steps.map((step, index) => (
+            <Reveal key={step.title} delay={index * 0.08} className="relative">
+              <li className="list-none">
+                <span className="absolute -left-[41px] top-0 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-1 ring-border">
+                  <span className="h-2 w-2 rounded-full bg-accent" />
+                </span>
+                <p className="font-body text-xs font-medium tabular-nums text-muted-foreground">Passo {index + 1}</p>
+                <h3 className="mt-2 font-body text-lg font-semibold text-foreground">{step.title}</h3>
+                <p className="mt-2 max-w-md font-body text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+              </li>
+            </Reveal>
+          ))}
+        </ol>
+      </div>
     </section>
   );
 }

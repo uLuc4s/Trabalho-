@@ -13,68 +13,68 @@ import { SectionHeading } from "./section-heading";
 const features = [
   {
     icon: CalendarClock,
-    title: "Agenda que não repete horário",
-    text: "O sistema bloqueia horários já ocupados, mesmo quando duas pessoas tentam marcar ao mesmo tempo.",
+    title: "Horário não se repete",
+    text: "Quando dois clientes tentam o mesmo horário, só um confirma. A regra fica no banco.",
   },
   {
     icon: Link2,
-    title: "Link para divulgar",
-    text: "Seu cliente escolhe serviço, profissional e horário, sem criar conta. Cole o link na bio ou no WhatsApp.",
+    title: "Link na bio",
+    text: "O cliente escolhe serviço, profissional e horário sem criar conta.",
   },
   {
     icon: Users,
-    title: "Agenda por profissional",
-    text: "Cada pessoa da equipe tem a própria agenda. Você acompanha tudo em uma visão consolidada.",
+    title: "Agenda de cada pessoa",
+    text: "Cada profissional vê a própria agenda. Você vê todas juntas.",
   },
   {
     icon: RefreshCw,
     title: "Google Agenda",
-    text: "Cada profissional conecta a própria conta e os atendimentos aparecem direto na agenda dele.",
+    text: "Cada pessoa conecta a própria conta e o atendimento aparece na agenda dela.",
   },
   {
     icon: ClipboardList,
-    title: "Ordens de serviço",
-    text: "Visitas, instalações e manutenções com responsável, status e histórico de cada etapa.",
+    title: "Ordem de serviço",
+    text: "Visita, instalação ou manutenção com responsável, status e histórico.",
   },
   {
     icon: Kanban,
-    title: "Tarefas e checklist",
-    text: "Um quadro Kanban para organizar a operação do dia e a equipe, com checklist em cada tarefa.",
+    title: "Tarefas do dia",
+    text: "Quadro com colunas e checklist, para a equipe ver o que falta.",
   },
   {
     icon: BellRing,
-    title: "Confirmações automáticas",
-    text: "O cliente recebe a confirmação do horário por e-mail, com o arquivo para adicionar à agenda.",
+    title: "Confirmação por e-mail",
+    text: "O cliente recebe o horário confirmado e um arquivo para salvar na agenda.",
   },
 ];
 
 export function Features() {
   return (
-    <section id="recursos" className="px-6 py-24 md:px-12 lg:px-20">
-      <SectionHeading
-        eyebrow="Recursos"
-        title={
-          <>
-            Tudo para atender bem, <em className="italic">sem</em> planilha
-          </>
-        }
-        description="Uma ferramenta só para agendamento, equipe e operação, pensada para quem atende no balcão e também em campo."
-      />
+    <section id="recursos" className="px-6 py-28 md:px-12 lg:px-20">
+      <div className="mx-auto grid max-w-6xl gap-16 lg:grid-cols-[1fr_1.4fr] lg:gap-24">
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <SectionHeading
+            eyebrow="Recursos"
+            title="O que muda no seu dia"
+            description="Menos mensagem perguntando horário, menos conflito na agenda e mais tempo para o atendimento."
+          />
+        </div>
 
-      <StaggerGroup className="mx-auto mt-16 grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((feature) => (
-          <StaggerItem
-            key={feature.title}
-            className="group flex flex-col gap-4 rounded-2xl border border-border bg-background p-6 transition-[box-shadow,transform,border-color] duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-dashboard"
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent transition-transform duration-300 group-hover:scale-110">
-              <feature.icon className="h-5 w-5" aria-hidden />
-            </div>
-            <h3 className="font-body text-lg font-semibold tracking-tight text-foreground">{feature.title}</h3>
-            <p className="font-body text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
-          </StaggerItem>
-        ))}
-      </StaggerGroup>
+        <StaggerGroup className="divide-y divide-border border-y border-border">
+          {features.map((feature) => (
+            <StaggerItem
+              key={feature.title}
+              className="group grid grid-cols-[2.5rem_1fr] gap-5 py-7 transition-colors hover:bg-secondary/40 md:px-4"
+            >
+              <feature.icon className="mt-1 h-5 w-5 text-accent transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
+              <div>
+                <h3 className="font-body text-base font-semibold text-foreground">{feature.title}</h3>
+                <p className="mt-1.5 font-body text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerGroup>
+      </div>
     </section>
   );
 }
