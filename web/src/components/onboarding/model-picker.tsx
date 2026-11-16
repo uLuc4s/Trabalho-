@@ -1,14 +1,17 @@
+// Seletor do onboarding: escolhe o modelo de negócio e o ramo, e cria os serviços de exemplo.
+// Roda no navegador porque tem seleção, clique e chamada ao banco.
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Loader2, Repeat, Ruler, Scissors, Truck, type LucideIcon } from "lucide-react";
-import { BUSINESS_MODELS } from "@/lib/business-models";
-import { SEGMENTS, type Segment } from "@/lib/business-segments";
-import type { BusinessModel } from "@/lib/company";
-import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation"; // para ir ao painel depois de salvar
+import { useState, useTransition } from "react"; // estado e transição de carregamento
+import { Loader2, Repeat, Ruler, Scissors, Truck, type LucideIcon } from "lucide-react"; // ícones
+import { BUSINESS_MODELS } from "@/lib/business-models"; // modelos e serviços de exemplo
+import { SEGMENTS, type Segment } from "@/lib/business-segments"; // ramos e serviços de exemplo
+import type { BusinessModel } from "@/lib/company"; // tipo do modelo
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { cn } from "@/lib/utils"; // junta classes CSS
 
+// Ícone de cada modelo. Liga o identificador ao componente de ícone.
 const ICONS: Record<BusinessModel, LucideIcon> = {
   balcao: Scissors,
   campo: Truck,
@@ -16,19 +19,24 @@ const ICONS: Record<BusinessModel, LucideIcon> = {
   recorrente: Repeat,
 };
 
+// Entrada: id da empresa e se ela já tem serviços (se tiver, não cria exemplos).
+// Saída: cartões de modelo, botões de ramo e o botão "Continuar".
 export function ModelPicker({ companyId, hasServices }: { companyId: string; hasServices: boolean }) {
   const router = useRouter();
-  const [selected, setSelected] = useState<BusinessModel | null>(null);
-  const [segment, setSegment] = useState<Segment | null>(null);
+  const [selected, setSelected] = useState<BusinessModel | null>(null); // modelo escolhido
+  const [segment, setSegment] = useState<Segment | null>(null); // ramo escolhido
   const [error, setError] = useState<string | null>(null);
-  const [servicesFailed, setServicesFailed] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [servicesFailed, setServicesFailed] = useState(false); // true quando os exemplos não foram criados
+  const [pending, startTransition] = useTransition(); // true enquanto salva
 
+  // Salva o modelo e o ramo, cria os serviços de exemplo se preciso e vai ao painel.
+  // Regra: se a criação dos exemplos falhar, a tela fica aberta com o aviso (não redireciona).
   function confirm() {
     if (!selected) return;
     setError(null);
     startTransition(async () => {
       const supabase = createClient();
+      // Grava o modelo e o ramo na empresa.
       const { error: updateError } = await supabase
         .from("companies")
         .update({ business_model: selected, segment })
@@ -38,7 +46,9 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
         return;
       }
 
+      // Só cria exemplos se a empresa ainda não tem serviços.
       if (!hasServices) {
+        // Prefere os exemplos do ramo. Se o ramo não tiver, usa os do modelo.
         const segmentServices = SEGMENTS.find((s) => s.id === segment)?.services ?? [];
         const model = BUSINESS_MODELS.find((m) => m.id === selected);
         const examples = segmentServices.length > 0 ? segmentServices : (model?.services ?? []);
@@ -46,7 +56,7 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
           const { error: servicesError } = await supabase.from("services").insert(examples.map((s) => ({ ...s, company_id: companyId })));
           if (servicesError) {
             setError("Empresa configurada, mas os serviços de exemplo não foram criados.");
-            setServicesFailed(true);
+            setServicesFailed(true); // mostra o link para cadastrar manualmente
             return;
           }
         }
@@ -59,6 +69,7 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Cartões dos modelos. O escolhido recebe destaque. */}
       <div className="grid gap-4 md:grid-cols-2">
         {BUSINESS_MODELS.map((model) => {
           const Icon = ICONS[model.id];
@@ -68,7 +79,7 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
               key={model.id}
               type="button"
               onClick={() => setSelected(model.id)}
-              aria-pressed={active}
+              aria-pressed={active} // leitor de tela sabe que está selecionado
               className={cn(
                 "group flex flex-col gap-4 rounded-2xl border p-6 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-dashboard",
                 active ? "border-accent bg-accent/5 shadow-dashboard" : "border-border bg-background",
@@ -93,6 +104,7 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {/* Atalho para cadastrar os serviços à mão, quando os exemplos falham. */}
       {servicesFailed && (
         <button
           type="button"
@@ -106,6 +118,7 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
         </button>
       )}
 
+      {/* Botões dos ramos de negócio. */}
       <div className="flex flex-col gap-3">
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Qual é o seu ramo?</p>
         <div className="flex flex-wrap gap-2">
@@ -128,6 +141,7 @@ export function ModelPicker({ companyId, hasServices }: { companyId: string; has
 
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">Você pode trocar isso depois em Configurações.</p>
+        {/* Só libera quando há modelo e ramo escolhidos e nada está salvando. */}
         <button
           type="button"
           onClick={confirm}
