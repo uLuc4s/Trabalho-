@@ -11,6 +11,7 @@ import {
   Inbox,
   LogOut,
   Scissors,
+  ListTodo,
   Settings,
   Users,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const items = [
   { href: "/app/solicitacoes", label: "Solicitações", icon: Inbox },
   { href: "/app/ordens", label: "Ordens de serviço", icon: ClipboardList },
   { href: "/app/servicos", label: "Serviços", icon: Scissors },
+  { href: "/app/tarefas", label: "Tarefas", icon: ListTodo },
   { href: "/app/equipe", label: "Equipe", icon: Users },
   { href: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];

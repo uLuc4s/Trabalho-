@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CancelAppointment } from "@/components/app/cancel-appointment";
+import { MonthCalendar, type DayCount } from "@/components/app/month-calendar";
 import { dayRange, formatTime, getCurrentCompany, todayInSaoPaulo } from "@/lib/company";
 
 type Pick<T> = T | T[] | null;
@@ -15,6 +16,7 @@ type Row = {
 };
 
 const first = <T,>(value: Pick<T>): T | undefined => (Array.isArray(value) ? value[0] : value ?? undefined);
+const dayKey = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
 function shiftDate(date: string, days: number) {
   const d = new Date(`${date}T12:00:00Z`);
@@ -30,18 +32,39 @@ const STATUS_LABEL: Record<string, string> = {
   no_show: "Não compareceu",
 };
 
-export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ data?: string }> }) {
-  const { data } = await searchParams;
-  const date = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : todayInSaoPaulo();
+export default async function AgendaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ data?: string; mes?: string }>;
+}) {
+  const { data, mes } = await searchParams;
+  const today = todayInSaoPaulo();
+  const date = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : today;
+  const [year, month] = mes && /^\d{4}-\d{2}$/.test(mes) ? mes.split("-").map(Number) : today.split("-").slice(0, 2).map(Number);
+
   const { supabase } = await getCurrentCompany();
   const range = dayRange(date);
+  const monthStart = `${year}-${String(month).padStart(2, "0")}-01T00:00:00-03:00`;
+  const nextMonth = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+  const monthEnd = `${nextMonth}T00:00:00-03:00`;
 
-  const { data: rows } = await supabase
-    .from("appointments")
-    .select("id, starts_at, ends_at, status, services(name), employees(display_name), customers(name, phone)")
-    .gte("starts_at", range.start)
-    .lte("starts_at", range.end)
-    .order("starts_at");
+  const [{ data: rows }, { data: monthRows }] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select("id, starts_at, ends_at, status, services(name), employees(display_name), customers(name, phone)")
+      .gte("starts_at", range.start)
+      .lte("starts_at", range.end)
+      .order("starts_at"),
+    supabase.from("appointments").select("starts_at, status").gte("starts_at", monthStart).lt("starts_at", monthEnd),
+  ]);
+
+  const counts: Record<string, DayCount> = {};
+  for (const row of (monthRows ?? []) as { starts_at: string; status: string }[]) {
+    const key = dayKey(row.starts_at);
+    counts[key] ??= { booked: 0, cancelled: 0 };
+    if (row.status === "cancelled") counts[key].cancelled += 1;
+    else counts[key].booked += 1;
+  }
 
   const list = (rows ?? []) as Row[];
   const dayLabel = new Date(`${date}T12:00:00Z`).toLocaleDateString("pt-BR", {
@@ -67,7 +90,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
             <ChevronLeft className="h-4 w-4" aria-hidden />
           </Link>
           <Link
-            href={`/app/agenda?data=${todayInSaoPaulo()}`}
+            href={`/app/agenda?data=${today}`}
             className="flex h-10 items-center rounded-full border border-border bg-background px-4 text-sm transition-colors hover:bg-secondary"
           >
             Hoje
@@ -82,35 +105,52 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
         </div>
       </header>
 
-      {list.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          Nenhum atendimento neste dia.
-        </div>
-      ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
-          {list.map((row) => {
-            const service = first(row.services);
-            const employee = first(row.employees);
-            const customer = first(row.customers);
-            const cancelled = row.status === "cancelled";
-            return (
-              <li key={row.id} className="grid gap-4 p-5 md:grid-cols-[110px_1fr_auto] md:items-center">
-                <p className="font-display text-3xl tabular-nums">{formatTime(row.starts_at)}</p>
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{customer?.name}</p>
-                  <p className="truncate text-sm text-muted-foreground">
-                    {service?.name} · {employee?.display_name} · {customer?.phone}
+      <MonthCalendar
+        year={year}
+        month={month}
+        counts={counts}
+        selected={date}
+        today={today}
+      />
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-medium text-muted-foreground">Atendimentos do dia · {list.length}</h2>
+        {list.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+            Nenhum atendimento neste dia.
+          </div>
+        ) : (
+          <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
+            {list.map((row) => {
+              const service = first(row.services);
+              const employee = first(row.employees);
+              const customer = first(row.customers);
+              const cancelled = row.status === "cancelled";
+              return (
+                <li key={row.id} className="grid gap-4 p-5 md:grid-cols-[110px_1fr_auto] md:items-center">
+                  <p className={cn("font-display text-3xl tabular-nums", cancelled && "text-muted-foreground line-through")}>
+                    {formatTime(row.starts_at)}
                   </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-secondary px-3 py-1 text-xs">{STATUS_LABEL[row.status] ?? row.status}</span>
-                  {!cancelled && <CancelAppointment appointmentId={row.id} />}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                  <div className="min-w-0">
+                    <p className={cn("truncate font-medium", cancelled && "text-muted-foreground line-through")}>{customer?.name}</p>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {service?.name} · {employee?.display_name} · {customer?.phone}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full bg-secondary px-3 py-1 text-xs">{STATUS_LABEL[row.status] ?? row.status}</span>
+                    {!cancelled && <CancelAppointment appointmentId={row.id} />}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
+}
+
+function cn(...classes: (string | false | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
 }
