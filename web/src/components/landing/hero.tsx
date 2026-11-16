@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Play, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Play, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DashboardPreview } from "./dashboard-preview";
@@ -14,22 +15,29 @@ const fadeUp = (y: number, delay: number, duration: number) => ({
 });
 
 export function Hero() {
+  const [demoOpen, setDemoOpen] = useState(false);
+
+  useEffect(() => {
+    if (!demoOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDemoOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [demoOpen]);
+
   return (
-    <section className="relative flex flex-1 items-center justify-center overflow-hidden">
+    <section className="relative flex flex-1 items-start justify-center pb-16 pt-28 md:pt-32">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(60% 50% at 50% 0%, hsl(var(--accent) / 0.14) 0%, transparent 70%), radial-gradient(40% 35% at 85% 20%, hsl(var(--accent) / 0.08) 0%, transparent 70%)",
-        }}
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-px bg-border"
       />
 
       <div className="relative z-10 flex w-full flex-col items-center px-6">
         <motion.div {...fadeUp(10, 0, 0.5)}>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-1.5 font-body text-sm text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-accent" aria-hidden />
-            Agenda online para barbearias, clínicas e serviços em campo
+          <span className="inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-1 font-body text-xs text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
+            Para barbearias, clínicas e serviços em campo
           </span>
         </motion.div>
 
@@ -59,7 +67,8 @@ export function Hero() {
           </Link>
           <Button
             variant="ghost"
-            aria-label="Ver demonstração"
+            aria-label="Ver demonstração do painel"
+            onClick={() => setDemoOpen(true)}
             className="h-11 w-11 rounded-full border-0 bg-background shadow-[0_2px_12px_rgba(0,0,0,0.08)] hover:bg-background/80"
           >
             <Play className="h-4 w-4 fill-foreground text-foreground" aria-hidden />
@@ -76,6 +85,40 @@ export function Hero() {
           </motion.div>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {demoOpen && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Demonstração do painel"
+            onClick={() => setDemoOpen(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              onClick={(event) => event.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.96, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="relative w-full max-w-5xl"
+            >
+              <button
+                type="button"
+                aria-label="Fechar demonstração"
+                onClick={() => setDemoOpen(false)}
+                className="absolute -top-12 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-background shadow-dashboard transition-transform hover:scale-105"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+              <DashboardPreview />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

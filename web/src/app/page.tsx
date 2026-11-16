@@ -9,7 +9,7 @@ import { Segments } from "@/components/landing/segments";
 export default function Home() {
   return (
     <main className="bg-background text-foreground">
-      <div className="relative flex h-[100svh] flex-col overflow-hidden">
+      <div className="relative flex min-h-[100svh] flex-col md:h-[100svh] md:overflow-hidden">
         <Navbar />
         <Hero />
       </div>
