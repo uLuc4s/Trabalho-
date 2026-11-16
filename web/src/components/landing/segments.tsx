@@ -1,5 +1,6 @@
 import { Hammer, Scissors, Stethoscope, Wrench } from "lucide-react";
 import { StaggerGroup, StaggerItem } from "@/components/motion/reveal";
+import { Spotlight } from "@/components/motion/interactive";
 import { SectionHeading } from "./section-heading";
 
 const segments = [
@@ -37,15 +38,14 @@ export function Segments() {
 
         <StaggerGroup className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2">
           {segments.map((segment) => (
-            <StaggerItem
-              key={segment.name}
-              className="group flex gap-5 bg-background p-7 transition-colors hover:bg-secondary/40"
-            >
-              <segment.icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-accent" aria-hidden />
-              <div>
-                <h3 className="font-body text-base font-semibold text-foreground">{segment.name}</h3>
-                <p className="mt-1.5 font-body text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
-              </div>
+            <StaggerItem key={segment.name} className="bg-background">
+              <Spotlight className="flex gap-5 p-7">
+                <segment.icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground transition-colors duration-500 group-hover:text-accent" aria-hidden />
+                <div>
+                  <h3 className="font-body text-base font-semibold text-foreground">{segment.name}</h3>
+                  <p className="mt-1.5 font-body text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
+                </div>
+              </Spotlight>
             </StaggerItem>
           ))}
         </StaggerGroup>

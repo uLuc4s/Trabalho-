@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Play, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Magnetic, Tilt } from "@/components/motion/interactive";
 import { DashboardPreview } from "./dashboard-preview";
 
 const fadeUp = (y: number, delay: number, duration: number) => ({
@@ -56,15 +57,17 @@ export function Hero() {
         </motion.p>
 
         <motion.div {...fadeUp(16, 0.3, 0.6)} className="mt-5 flex items-center gap-3">
-          <Link
-            href="/cadastro"
-            className={cn(
-              buttonVariants(),
-              "rounded-full bg-accent px-6 py-5 font-body text-sm font-medium text-accent-foreground hover:bg-accent/90",
-            )}
-          >
-            Criar conta grátis
-          </Link>
+          <Magnetic>
+            <Link
+              href="/cadastro"
+              className={cn(
+                buttonVariants(),
+                "rounded-full bg-accent px-6 py-5 font-body text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90",
+              )}
+            >
+              Criar conta grátis
+            </Link>
+          </Magnetic>
           <Button
             variant="ghost"
             aria-label="Ver demonstração do painel"
@@ -81,7 +84,9 @@ export function Hero() {
             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
             className="w-full max-w-5xl"
           >
-            <DashboardPreview />
+            <Tilt max={3}>
+              <DashboardPreview />
+            </Tilt>
           </motion.div>
         </motion.div>
       </div>

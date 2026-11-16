@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ScrollHeader } from "@/components/motion/page-chrome";
+import { Magnetic } from "@/components/motion/interactive";
 import { MobileMenu } from "./mobile-menu";
 
 const links = [
@@ -13,7 +15,8 @@ const links = [
 
 export function Navbar() {
   return (
-    <header className="relative z-40 flex items-center justify-between px-6 py-5 font-body md:px-12 lg:px-20">
+    <ScrollHeader>
+      <div className="flex items-center justify-between px-6 py-5 font-body md:px-12 lg:px-20">
       <Link
         href="/"
         aria-label="Voltar para o início"
@@ -27,7 +30,7 @@ export function Navbar() {
           <a
             key={link.label}
             href={link.href}
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="relative py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-foreground after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-foreground after:transition-transform after:duration-500 hover:after:scale-x-100"
           >
             {link.label}
           </a>
@@ -41,17 +44,20 @@ export function Navbar() {
         >
           Entrar
         </Link>
-        <Link
-          href="/cadastro"
-          className={cn(
-            buttonVariants(),
-            "rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90",
-          )}
-        >
-          Criar conta
-        </Link>
+        <Magnetic>
+          <Link
+            href="/cadastro"
+            className={cn(
+              buttonVariants(),
+              "rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90",
+            )}
+          >
+            Criar conta
+          </Link>
+        </Magnetic>
         <MobileMenu />
       </div>
-    </header>
+      </div>
+    </ScrollHeader>
   );
 }

@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { StaggerGroup, StaggerItem } from "@/components/motion/reveal";
+import { Spotlight } from "@/components/motion/interactive";
 import { SectionHeading } from "./section-heading";
 
 const features = [
@@ -62,15 +63,14 @@ export function Features() {
 
         <StaggerGroup className="divide-y divide-border border-y border-border">
           {features.map((feature) => (
-            <StaggerItem
-              key={feature.title}
-              className="group grid grid-cols-[2.5rem_1fr] gap-5 py-7 transition-colors hover:bg-secondary/40 md:px-4"
-            >
-              <feature.icon className="mt-1 h-5 w-5 text-accent transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
-              <div>
-                <h3 className="font-body text-base font-semibold text-foreground">{feature.title}</h3>
-                <p className="mt-1.5 font-body text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
-              </div>
+            <StaggerItem key={feature.title}>
+              <Spotlight className="grid grid-cols-[2.5rem_1fr] gap-5 py-7 md:px-4">
+                <feature.icon className="mt-1 h-5 w-5 text-accent transition-transform duration-500 group-hover:translate-x-1" aria-hidden />
+                <div>
+                  <h3 className="font-body text-base font-semibold text-foreground">{feature.title}</h3>
+                  <p className="mt-1.5 font-body text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
+                </div>
+              </Spotlight>
             </StaggerItem>
           ))}
         </StaggerGroup>

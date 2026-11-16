@@ -1,3 +1,4 @@
+import { ScrollProgress } from "@/components/motion/page-chrome";
 import { CtaFooter } from "@/components/landing/cta-footer";
 import { Faq } from "@/components/landing/faq";
 import { Features } from "@/components/landing/features";
@@ -9,6 +10,7 @@ import { Segments } from "@/components/landing/segments";
 export default function Home() {
   return (
     <main className="bg-background text-foreground">
+      <ScrollProgress />
       <div className="relative flex min-h-[100svh] flex-col md:h-[100svh] md:overflow-hidden">
         <Navbar />
         <Hero />

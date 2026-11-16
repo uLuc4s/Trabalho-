@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "@/components/motion/reveal";
+import { Magnetic } from "@/components/motion/interactive";
 import { Copyright } from "./copyright";
 
 const footerLinks = [
@@ -18,12 +19,14 @@ export function CtaFooter() {
           <h2 className="max-w-lg font-display text-4xl leading-tight tracking-tight md:text-5xl">
             Crie a conta e mande o link para o seu cliente hoje
           </h2>
-          <Link
-            href="/cadastro"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-7 font-body text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
-          >
-            Criar conta
-          </Link>
+          <Magnetic>
+            <Link
+              href="/cadastro"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-7 font-body text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+            >
+              Criar conta
+            </Link>
+          </Magnetic>
         </Reveal>
       </section>
 
