@@ -1,10 +1,12 @@
+// Menu lateral do painel (versão de computador). Mostra só os itens do modelo de negócio da empresa.
+// Traz o botão de sair e o bloco com o link público da empresa, com cópia.
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import { motion } from "framer-motion";
+import Link from "next/link"; // navegação interna
+import Image from "next/image"; // logo
+import { usePathname, useRouter } from "next/navigation"; // caminho atual e navegação
+import { useState } from "react"; // estado do botão de copiar
+import { motion } from "framer-motion"; // animação do destaque do item ativo
 import {
   BarChart3,
   CalendarDays,
@@ -19,11 +21,12 @@ import {
   Settings,
   Users,
   UserRound,
-} from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { MobileNav } from "@/components/app/mobile-nav";
-import { cn } from "@/lib/utils";
+} from "lucide-react"; // ícones dos itens
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador, para sair
+import { MobileNav } from "@/components/app/mobile-nav"; // menu do celular
+import { cn } from "@/lib/utils"; // junta classes CSS
 
+// Todos os itens do painel, na ordem em que aparecem.
 const items = [
   { href: "/app", label: "Início", icon: Home },
   { href: "/app/agenda", label: "Agenda", icon: CalendarDays },
@@ -37,6 +40,7 @@ const items = [
   { href: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];
 
+// Itens escondidos por modelo de negócio. Ex.: balcão não usa solicitações nem ordens de serviço.
 const HIDDEN_BY_MODEL: Record<string, string[]> = {
   balcao: ["/app/solicitacoes", "/app/ordens"],
   campo: [],
@@ -44,13 +48,16 @@ const HIDDEN_BY_MODEL: Record<string, string[]> = {
   recorrente: ["/app/ordens"],
 };
 
+// Botão que copia o link público da empresa para a área de transferência.
+// Entrada: slug da empresa. Saída: botão que mostra "Link copiado" por 1,6 segundo.
 function CopyLink({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false);
 
+  // Copia o endereço completo, ex.: https://site/e/oficina-norte.
   async function copy() {
     await navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+    setTimeout(() => setCopied(false), 1600); // volta ao texto normal depois de 1,6 s
   }
 
   return (
@@ -65,12 +72,15 @@ function CopyLink({ slug }: { slug: string }) {
   );
 }
 
+// Entrada: nome da empresa, slug e modelo de negócio.
+// Saída: menu lateral (computador) e o menu do celular.
 export function AppSidebar({ companyName, slug, model }: { companyName: string; slug: string; model: string | null }) {
-  const pathname = usePathname();
+  const pathname = usePathname(); // caminho atual, para destacar o item ativo
   const router = useRouter();
-  const hidden = HIDDEN_BY_MODEL[model ?? ""] ?? [];
+  const hidden = HIDDEN_BY_MODEL[model ?? ""] ?? []; // itens que este modelo não usa
   const visibleItems = items.filter((item) => !hidden.includes(item.href));
 
+  // Encerra a sessão e volta para o login.
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -80,7 +90,9 @@ export function AppSidebar({ companyName, slug, model }: { companyName: string; 
 
   return (
     <>
+    {/* Menu do celular: aparece só em telas pequenas. */}
     <MobileNav items={visibleItems} />
+    {/* Menu lateral: aparece só em telas médias ou maiores (hidden no celular). */}
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-8 border-r border-border bg-background p-6 md:flex">
       <Link href="/app" className="flex items-center">
         <Image src="/brand/agendfix-principal.svg" alt="agendfix" width={150} height={33} priority unoptimized />
@@ -93,6 +105,7 @@ export function AppSidebar({ companyName, slug, model }: { companyName: string; 
 
       <nav aria-label="Painel" className="flex flex-col gap-1">
         {visibleItems.map((item) => {
+          // Início só fica ativo na página exata; os outros ficam ativos em suas subpáginas também.
           const active = item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href);
           return (
             <Link
@@ -103,6 +116,7 @@ export function AppSidebar({ companyName, slug, model }: { companyName: string; 
                 active ? "text-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
               )}
             >
+              {/* Fundo do item ativo: uma mesma camada que desliza entre os itens (layoutId). */}
               {active && (
                 <motion.span
                   layoutId="sidebar-active"
@@ -126,6 +140,7 @@ export function AppSidebar({ companyName, slug, model }: { companyName: string; 
         Sair
       </button>
 
+      {/* Bloco com o link público da empresa, empurrado para o pé da barra. */}
       <div className="mt-auto flex flex-col gap-2 rounded-xl border border-border bg-secondary/50 p-4">
         <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Sua página de agendamento</p>
         <p className="truncate text-xs text-foreground">/e/{slug}</p>

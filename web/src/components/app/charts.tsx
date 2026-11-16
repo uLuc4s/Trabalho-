@@ -1,24 +1,33 @@
+// Gráficos feitos em SVG puro, sem biblioteca externa: barras (BarChart) e rosca (Donut).
+// Roda no navegador porque tem hover e animação.
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState } from "react"; // estado do item sob o cursor
+import { motion } from "framer-motion"; // animação das barras e das fatias
 
+// Um ponto de dado: rótulo e valor.
 export type Point = { label: string; value: number };
 
+// Gráfico de barras verticais com destaque ao passar o mouse.
+// Entrada: dados, altura em pixels e cor das barras.
+// Saída: gráfico com rótulos e uma dica (tooltip) do item sob o cursor.
 export function BarChart({ data, height = 180, color = "hsl(var(--accent))" }: { data: Point[]; height?: number; color?: string }) {
-  const [hover, setHover] = useState<number | null>(null);
-  const max = Math.max(1, ...data.map((d) => d.value));
-  const barW = 100 / Math.max(1, data.length);
+  const [hover, setHover] = useState<number | null>(null); // índice da barra sob o cursor
+  const max = Math.max(1, ...data.map((d) => d.value)); // maior valor, mínimo 1 para não dividir por zero
+  const barW = 100 / Math.max(1, data.length); // largura de cada coluna, em porcentagem do gráfico
 
   return (
     <div className="relative w-full" style={{ height }}>
+      {/* viewBox fixo de 100 de largura: o desenho se adapta ao tamanho do quadro. */}
       <svg viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="h-full w-full overflow-visible">
         {data.map((d, i) => {
-          const h = (d.value / max) * (height - 22);
-          const x = i * barW + barW * 0.18;
+          const h = (d.value / max) * (height - 22); // altura proporcional ao maior valor; 22 px reservados ao rótulo
+          const x = i * barW + barW * 0.18; // barra centralizada na coluna
           return (
             <g key={d.label + i} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+              {/* Área transparente da coluna inteira, para o hover ser fácil de acionar. */}
               <rect x={i * barW} y={0} width={barW} height={height} fill="transparent" />
+              {/* Barra animada que cresce de baixo para cima, com atraso por posição. */}
               <motion.rect
                 x={x}
                 width={barW * 0.64}
@@ -27,12 +36,13 @@ export function BarChart({ data, height = 180, color = "hsl(var(--accent))" }: {
                 animate={{ y: height - 22 - h, height: h }}
                 transition={{ duration: 0.7, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] }}
                 fill={color}
-                opacity={hover === null || hover === i ? 1 : 0.35}
+                opacity={hover === null || hover === i ? 1 : 0.35} // as outras ficam apagadas durante o hover
               />
             </g>
           );
         })}
       </svg>
+      {/* Rótulos embaixo: mostra só alguns para não encavalar. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex text-[10px] text-muted-foreground">
         {data.map((d, i) => (
           <span key={d.label + i} className="flex-1 truncate text-center">
@@ -40,6 +50,7 @@ export function BarChart({ data, height = 180, color = "hsl(var(--accent))" }: {
           </span>
         ))}
       </div>
+      {/* Dica com o rótulo e o valor da barra sob o cursor. */}
       {hover !== null && (
         <div
           className="pointer-events-none absolute -top-2 rounded-md bg-foreground px-2 py-1 text-[11px] text-background shadow-dashboard"
@@ -52,20 +63,26 @@ export function BarChart({ data, height = 180, color = "hsl(var(--accent))" }: {
   );
 }
 
+// Gráfico de rosca, com legenda ao lado.
+// Entrada: dados e tamanho em pixels.
+// Saída: rosca animada com a soma de cada fatia e a legenda.
 export function Donut({ data, size = 140 }: { data: Point[]; size?: number }) {
-  const total = data.reduce((acc, d) => acc + d.value, 0);
+  const total = data.reduce((acc, d) => acc + d.value, 0); // soma de todos os valores
+  // Cores das fatias, na ordem. Repete se houver mais fatias que cores.
   const palette = ["hsl(var(--accent))", "#0F172A", "#94A3B8", "#C7D2FE", "#64748B"];
-  const r = 46;
-  const circumference = 2 * Math.PI * r;
-  let offset = 0;
+  const r = 46; // raio do círculo, em unidades do viewBox
+  const circumference = 2 * Math.PI * r; // perímetro do círculo, base para o tamanho das fatias
+  let offset = 0; // onde começa a próxima fatia
 
   return (
     <div className="flex items-center gap-6">
+      {/* A rotação de -90 graus faz a primeira fatia começar no topo. */}
       <svg viewBox="0 0 120 120" width={size} height={size} className="shrink-0 -rotate-90">
+        {/* Trilho cinza de fundo, sempre visível. */}
         <circle cx="60" cy="60" r={r} fill="none" stroke="hsl(var(--secondary))" strokeWidth="14" />
         {total > 0 &&
           data.map((d, i) => {
-            const length = (d.value / total) * circumference;
+            const length = (d.value / total) * circumference; // comprimento desta fatia
             const segment = (
               <motion.circle
                 key={d.label}
@@ -75,17 +92,18 @@ export function Donut({ data, size = 140 }: { data: Point[]; size?: number }) {
                 fill="none"
                 stroke={palette[i % palette.length]}
                 strokeWidth="14"
-                strokeDasharray={`${length} ${circumference - length}`}
-                strokeDashoffset={-offset}
+                strokeDasharray={`${length} ${circumference - length}`} // pedaço visível e espaço vazio
+                strokeDashoffset={-offset} // empurra a fatia para a posição certa
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: i * 0.08 }}
               />
             );
-            offset += length;
+            offset += length; // a próxima fatia começa onde esta terminou
             return segment;
           })}
       </svg>
+      {/* Legenda: cor, nome e valor de cada fatia. */}
       <ul className="flex flex-col gap-2 text-sm">
         {data.map((d, i) => (
           <li key={d.label} className="flex items-center gap-2">

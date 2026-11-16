@@ -1,27 +1,33 @@
+// Formulário para criar a empresa: nome e endereço público. O endereço é sugerido pelo nome, até o usuário editar.
+// Roda no navegador porque tem estado, digitação e chamada ao Supabase.
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { AlertCircle, Building2, Link2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
-import { toSlug } from "@/lib/slug";
+import { useRouter } from "next/navigation"; // navegação após criar a empresa
+import { useState } from "react"; // estado dos campos
+import { AlertCircle, Building2, Link2, Loader2 } from "lucide-react"; // ícones
+import { Button } from "@/components/ui/button"; // botão padrão
+import { Input } from "@/components/ui/input"; // campo padrão
+import { Label } from "@/components/ui/label"; // rótulo padrão
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { toSlug } from "@/lib/slug"; // transforma o nome em endereço
 
+// Entrada: nada além do estado da tela.
+// Saída: formulário que cria a empresa e leva ao escolher o modelo.
 export function OnboardingForm() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [slugTouched, setSlugTouched] = useState(false);
+  const [name, setName] = useState(""); // nome da empresa
+  const [slug, setSlug] = useState(""); // endereço público
+  const [slugTouched, setSlugTouched] = useState(false); // true quando o usuário editou o endereço à mão
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Atualiza o nome e, se o endereço ainda não foi editado, gera o endereço a partir do nome.
   function handleNameChange(value: string) {
     setName(value);
     if (!slugTouched) setSlug(toSlug(value));
   }
 
+  // Cria a empresa pelo banco. Regra: endereço com pelo menos 3 caracteres.
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -39,6 +45,7 @@ export function OnboardingForm() {
       p_timezone: "America/Sao_Paulo",
     });
 
+    // Endereço repetido: o banco recusa com erro 23505 (chave única). Mostra mensagem clara.
     if (rpcError) {
       setError(
         rpcError.message.includes("companies_slug_key") || rpcError.code === "23505"
@@ -55,6 +62,7 @@ export function OnboardingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {/* Nome da empresa, com ícone de prédio. */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="company-name">Nome da empresa</Label>
         <div className="relative">
@@ -69,6 +77,7 @@ export function OnboardingForm() {
         </div>
       </div>
 
+      {/* Endereço público. Ao digitar aqui, marca como editado e para de seguir o nome. */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="company-slug">Endereço público</Label>
         <div className="relative">
@@ -79,7 +88,7 @@ export function OnboardingForm() {
             value={slug}
             onChange={(e) => {
               setSlugTouched(true);
-              setSlug(toSlug(e.target.value));
+              setSlug(toSlug(e.target.value)); // sempre limpa para o formato válido
             }}
             className="pl-9"
           />

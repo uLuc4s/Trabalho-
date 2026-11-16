@@ -1,27 +1,36 @@
+// Formulário público de pedido de orçamento ou visita. Não exige login.
+// Ao enviar, mostra o link para o cliente acompanhar o pedido.
+// Roda no navegador porque tem estado e chamada ao banco.
 "use client";
 
-import Link from "next/link";
-import { useState, useTransition } from "react";
-import { AlertCircle, Check, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link"; // link para acompanhar o pedido
+import { useState, useTransition } from "react"; // estado e transição de envio
+import { AlertCircle, Check, Loader2 } from "lucide-react"; // ícones
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Serviço que o cliente pode escolher.
 type Service = { id: string; name: string };
 
+// Classe comum a todos os campos deste formulário.
 const inputClass =
   "h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground transition-colors focus:border-accent focus:outline-none";
 
+// Entrada: endereço da empresa (slug) e lista de serviços.
+// Saída: formulário, ou a confirmação com o link de acompanhamento.
 export function ServiceRequestForm({ slug, services }: { slug: string; services: Service[] }) {
-  const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
+  const [serviceId, setServiceId] = useState(services[0]?.id ?? ""); // primeiro serviço vem pré-selecionado
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [window, setWindow] = useState("");
+  const [window, setWindow] = useState(""); // preferência de dia ou horário
   const [notes, setNotes] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [consent, setConsent] = useState(false); // aceite do uso dos dados (LGPD)
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null); // token do pedido, depois de enviar
   const [submitting, startSubmit] = useTransition();
 
+  // Valida os campos e envia o pedido ao banco.
+  // Regras: serviço escolhido, nome com 2+ letras, telefone com DDD (10+ dígitos) e aceite marcado.
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -36,7 +45,7 @@ export function ServiceRequestForm({ slug, services }: { slug: string; services:
         p_service_id: serviceId,
         p_name: name.trim(),
         p_phone: phone,
-        p_window: window.trim() || null,
+        p_window: window.trim() || null, // vazio vira null
         p_notes: notes.trim() || null,
         p_email: email.trim() || null,
       });
@@ -44,10 +53,12 @@ export function ServiceRequestForm({ slug, services }: { slug: string; services:
         setError(rpcError.message);
         return;
       }
-      setDone((data as { token: string }).token);
+      setDone((data as { token: string }).token); // guarda o token para montar o link de acompanhamento
     });
   }
 
+  // Confirmação: o cliente vê o link para acompanhar o pedido.
+  // ATENÇÃO: o token vai na URL. Pode aparecer em histórico e logs de acesso.
   if (done) {
     return (
       <div className="flex flex-col items-start gap-5 rounded-2xl border border-border bg-background p-8">
@@ -70,6 +81,7 @@ export function ServiceRequestForm({ slug, services }: { slug: string; services:
 
   return (
     <form onSubmit={submit} className="grid gap-4 rounded-2xl border border-border bg-background p-6 md:grid-cols-2">
+      {/* Escolha do serviço. Ocupa a largura toda. */}
       <label className="flex flex-col gap-2 text-sm md:col-span-2">
         <span className="text-muted-foreground">Serviço</span>
         <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className={inputClass}>
@@ -105,6 +117,7 @@ export function ServiceRequestForm({ slug, services }: { slug: string; services:
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
         />
       </label>
+      {/* Aceite explícito do uso dos dados. Sem ele, o envio é recusado. */}
       <label className="flex items-start gap-3 text-sm text-muted-foreground md:col-span-2">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
         Concordo que a empresa use meu nome e telefone para responder este pedido.
