@@ -1,20 +1,24 @@
+// Página do convite: a pessoa convidada aceita o convite pelo link (?token=).
+// Se não estiver logada, é mandada para o login e volta para cá depois.
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, useTransition } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link"; // navegação interna
+import Image from "next/image"; // logo
+import { useRouter, useSearchParams } from "next/navigation"; // lê a URL e navega
+import { Suspense, useState, useTransition } from "react"; // estado e transição
+import { AlertCircle, Loader2 } from "lucide-react"; // ícones
+import { Button } from "@/components/ui/button"; // botão padrão
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Botão de aceitar o convite. Precisa de Suspense porque lê os parâmetros da URL.
 function AcceptInvite() {
   const router = useRouter();
   const params = useSearchParams();
-  const token = params.get("token") ?? "";
-  const [pending, startTransition] = useTransition();
+  const token = params.get("token") ?? ""; // token do link, ou vazio
+  const [pending, startTransition] = useTransition(); // true enquanto aceita
   const [error, setError] = useState<string | null>(null);
 
+  // Aceita o convite. Se não houver login, manda para o login com retorno para esta página.
   function accept() {
     setError(null);
     startTransition(async () => {
@@ -26,7 +30,7 @@ function AcceptInvite() {
       }
       const { error: rpcError } = await supabase.rpc("accept_invitation", { p_token: token });
       if (rpcError) {
-        setError(rpcError.message);
+        setError(rpcError.message); // ex.: convite expirado ou de outro e-mail
         return;
       }
       router.push("/app");
@@ -62,6 +66,7 @@ function AcceptInvite() {
   );
 }
 
+// Página da rota: logo, título e o botão de aceitar.
 export default function ConvitePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-12">

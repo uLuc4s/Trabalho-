@@ -1,12 +1,16 @@
+// Página do cliente para acompanhar um pedido de orçamento ou visita, pelo link recebido (?token=).
+// Não exige login. ATENÇÃO: o token fica na URL e pode aparecer em histórico e logs de acesso.
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useSearchParams } from "next/navigation"; // lê o token da URL
+import { Suspense, useEffect, useState } from "react"; // estado e efeitos
+import { AlertCircle, Loader2 } from "lucide-react"; // ícones
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Dados do pedido, como a função public_get_service_request devolve.
 type Request = { status: string; service: string; company: string; preferred_window: string | null };
 
+// Texto amigável para cada situação do pedido.
 const STATUS: Record<string, string> = {
   new: "Recebido, aguardando análise",
   under_review: "Em análise",
@@ -16,11 +20,13 @@ const STATUS: Record<string, string> = {
   cancelled: "Cancelado",
 };
 
+// Busca o pedido pelo token e mostra os dados e a situação.
 function Pedido() {
   const token = useSearchParams().get("token") ?? "";
   const [data, setData] = useState<Request | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Busca assim que o token chega. A flag "active" evita atualizar a tela depois que a página saiu.
   useEffect(() => {
     if (!token) return;
     let active = true;
@@ -36,6 +42,7 @@ function Pedido() {
     };
   }, [token]);
 
+  // Três estados: sem token, erro, ou carregando. Depois, os dados.
   if (!token) return <p className="text-sm text-destructive">Link incompleto.</p>;
   if (error) return <p role="alert" className="flex items-center gap-2 text-sm text-destructive"><AlertCircle className="h-4 w-4" aria-hidden />{error}</p>;
   if (!data) return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />;
@@ -50,6 +57,7 @@ function Pedido() {
   );
 }
 
+// Página da rota. O Suspense é exigido pelo Next para useSearchParams.
 export default function SolicitacaoPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
