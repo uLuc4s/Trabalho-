@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CalendarCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 const links = [
   { label: "Início", href: "#" },
@@ -29,9 +29,14 @@ export function Navbar() {
         ))}
       </div>
 
-      <Button className="rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+      <Link
+        href="/login"
+        className={buttonVariants({
+          className: "rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90",
+        })}
+      >
         Entrar
-      </Button>
+      </Link>
     </nav>
   );
 }
