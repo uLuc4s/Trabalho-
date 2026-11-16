@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { BookingFlow } from "@/components/booking/booking-flow";
+import { ServiceRequestForm } from "@/components/booking/service-request-form";
 import { createClient } from "@/lib/supabase/server";
 
 type Info = {
@@ -26,6 +27,16 @@ export default async function PublicBookingPage({ params }: { params: Promise<{ 
           <p className="text-sm text-muted-foreground">Escolha o serviço, o dia e o horário. Não precisa criar conta.</p>
         </header>
         <BookingFlow slug={slug} info={info} />
+
+        {info.services.length > 0 && (
+          <section className="flex flex-col gap-4 border-t border-border pt-12">
+            <div>
+              <h2 className="font-display text-3xl tracking-tight">Não achou o que precisa?</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Peça um orçamento ou uma visita. A empresa responde pelo seu contato.</p>
+            </div>
+            <ServiceRequestForm slug={slug} services={info.services} />
+          </section>
+        )}
       </div>
     </main>
   );

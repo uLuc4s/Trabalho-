@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AlertCircle, Loader2, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const router = useRouter();
+  const next = useSearchParams().get("next");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +34,8 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/app");
+    const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/app";
+    router.push(target);
     router.refresh();
   }
 
