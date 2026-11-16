@@ -1,56 +1,27 @@
+// Página de ordens de serviço: lista, veículo, status, ações e histórico de cada ordem.
+// A consulta fica em services, as regras em mappers e os tipos em dto.
+
 import { WorkOrderActions } from "@/components/app/work-order-actions";
 import { formatDateTime, getCurrentCompany } from "@/lib/company";
+import { getLinkedAppointments, getWorkOrderEvents, getWorkOrders } from "@/services/ordens.service";
+import { buildVehicleByOrder, describeEvent, groupEventsByOrder, STATUS_LABEL } from "@/mappers/ordens.mapper";
+import { first } from "@/mappers/agenda.mapper";
 
-type Pick<T> = T | T[] | null;
-type Row = {
-  id: string;
-  title: string;
-  status: string;
-  created_at: string;
-  customers: Pick<{ name: string }>;
-};
-
-const first = <T,>(value: Pick<T>): T | undefined => (Array.isArray(value) ? value[0] : value ?? undefined);
-
-const STATUS_LABEL: Record<string, string> = {
-  open: "Aberta",
-  scheduled: "Programada",
-  in_progress: "Em execução",
-  completed: "Concluída",
-  cancelled: "Cancelada",
-};
-
+// Entrada: nada além da sessão do usuário.
+// Saída: lista de ordens com veículo e histórico de status.
 export default async function OrdensPage() {
   const { supabase } = await getCurrentCompany();
 
-  const { data: rows, error: loadError } = await supabase
-    .from("work_orders")
-    .select("id, title, status, created_at, customers(name)")
-    .order("created_at", { ascending: false })
-    .limit(60);
+  // Busca ordens, histórico e veículos em paralelo.
+  const [{ data: rows, error: loadError }, { data: events }, { data: linked }] = await Promise.all([
+    getWorkOrders(supabase),
+    getWorkOrderEvents(supabase),
+    getLinkedAppointments(supabase),
+  ]);
 
-  const list = (rows ?? []) as Row[];
-
-  const { data: events } = await supabase
-    .from("work_order_events")
-    .select("work_order_id, event_type, payload, created_at")
-    .order("created_at", { ascending: false })
-    .limit(300);
-  const historyByOrder = new Map<string, { event_type: string; payload: { from?: string; to?: string }; created_at: string }[]>();
-  for (const e of (events ?? []) as { work_order_id: string; event_type: string; payload: { from?: string; to?: string }; created_at: string }[]) {
-    const list = historyByOrder.get(e.work_order_id) ?? [];
-    list.push(e);
-    historyByOrder.set(e.work_order_id, list);
-  }
-
-  const { data: linked } = await supabase
-    .from("appointments")
-    .select("work_order_id, details")
-    .not("work_order_id", "is", null);
-  const vehicleByOrder = new Map<string, { placa?: string; veiculo?: string; ano?: string }>();
-  for (const a of (linked ?? []) as { work_order_id: string; details: { placa?: string; veiculo?: string; ano?: string } | null }[]) {
-    if (a.details?.placa) vehicleByOrder.set(a.work_order_id, a.details);
-  }
+  const list = rows ?? [];
+  const historyByOrder = groupEventsByOrder(events ?? []); // histórico de cada ordem
+  const vehicleByOrder = buildVehicleByOrder(linked ?? []); // veículo de cada ordem
 
   return (
     <div className="flex flex-col gap-8">
@@ -59,6 +30,7 @@ export default async function OrdensPage() {
         <p className="mt-2 text-sm text-muted-foreground">Acompanhe cada etapa do trabalho até a conclusão.</p>
       </header>
 
+      {/* Se a consulta falhar, mostra aviso em vez de parecer lista vazia. */}
       {loadError ? (
         <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar as ordens. Recarregue a página.</p>
       ) : list.length === 0 ? (
@@ -69,6 +41,8 @@ export default async function OrdensPage() {
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
           {list.map((row) => {
             const customer = first(row.customers);
+            const vehicle = vehicleByOrder.get(row.id);
+            const history = historyByOrder.get(row.id) ?? [];
             return (
               <li key={row.id} className="grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center">
                 <div className="min-w-0">
@@ -76,9 +50,9 @@ export default async function OrdensPage() {
                   <p className="text-sm text-muted-foreground">
                     {customer?.name} · aberta em {formatDateTime(row.created_at)}
                   </p>
-                  {vehicleByOrder.get(row.id) && (
+                  {vehicle && (
                     <p className="mt-1 text-sm">
-                      Veículo: {vehicleByOrder.get(row.id)?.veiculo} {vehicleByOrder.get(row.id)?.ano ? `(${vehicleByOrder.get(row.id)?.ano})` : ""} · Placa {vehicleByOrder.get(row.id)?.placa}
+                      Veículo: {vehicle.veiculo} {vehicle.ano ? `(${vehicle.ano})` : ""} · Placa {vehicle.placa}
                     </p>
                   )}
                   <span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-xs">
@@ -86,13 +60,15 @@ export default async function OrdensPage() {
                   </span>
                 </div>
                 <div className="flex flex-col items-end gap-2">
+                  {/* Botões para avançar ou cancelar a ordem, conforme o status atual. */}
                   <WorkOrderActions workOrderId={row.id} status={row.status} />
+                  {/* Histórico recolhível de mudanças de status. */}
                   <details className="text-xs text-muted-foreground">
-                    <summary className="cursor-pointer">Histórico ({historyByOrder.get(row.id)?.length ?? 0})</summary>
+                    <summary className="cursor-pointer">Histórico ({history.length})</summary>
                     <ul className="mt-2 flex flex-col gap-1 text-right">
-                      {(historyByOrder.get(row.id) ?? []).map((e, i) => (
+                      {history.map((e, i) => (
                         <li key={i}>
-                          {e.event_type === "created" ? "Ordem criada" : `${STATUS_LABEL[e.payload.from ?? ""] ?? e.payload.from} → ${STATUS_LABEL[e.payload.to ?? ""] ?? e.payload.to}`} · {formatDateTime(e.created_at)}
+                          {describeEvent(e)} · {formatDateTime(e.created_at)}
                         </li>
                       ))}
                     </ul>
