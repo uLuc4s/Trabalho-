@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ScrollHeader } from "@/components/motion/page-chrome";
@@ -18,17 +18,17 @@ export function Navbar() {
   return (
     <ScrollHeader>
       <div className="flex items-center justify-between px-6 py-5 font-body md:px-12 lg:px-20">
-      <Link
-        href="/"
-        aria-label="Voltar para o início"
+      <a
+        href="#topo"
+        aria-label="Voltar ao topo"
         className="group flex items-center gap-2 rounded-lg transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <ArrowLeft
-          className="h-5 w-5 -translate-x-3 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+        <ArrowUp
+          className="h-5 w-5 -translate-y-3 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
           aria-hidden
         />
         <Image src="/brand/agendfix-principal.svg" alt="" width={180} height={40} priority unoptimized />
-      </Link>
+      </a>
 
       <nav aria-label="Principal" className="hidden items-center gap-8 md:flex">
         {links.map((link) => (
