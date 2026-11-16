@@ -1,32 +1,23 @@
-import { KanbanBoard, type Column, type Task } from "@/components/app/kanban-board";
-import { getCurrentCompany } from "@/lib/company";
+// Página de tarefas: quadro Kanban com colunas, tarefas e checklist.
+// As consultas ficam em services e a junção de checklist em mappers.
 
+import { KanbanBoard, type Column } from "@/components/app/kanban-board";
+import { getCurrentCompany } from "@/lib/company";
+import { getBoardContent, getFirstBoard } from "@/services/tarefas.service";
+import { attachChecklist } from "@/mappers/tarefas.mapper";
+
+// Entrada: nada além da sessão do usuário.
+// Saída: quadro com as colunas e as tarefas da empresa.
 export default async function TarefasPage() {
   const { supabase, company, role } = await getCurrentCompany();
-  const canManage = role === "owner" || role === "admin";
+  const canManage = role === "owner" || role === "admin"; // só dono e admin criam quadro
 
-  const { data: board, error: boardError } = await supabase.from("task_boards").select("id").order("created_at").limit(1).maybeSingle();
+  const { data: board, error: boardError } = await getFirstBoard(supabase);
 
-  const [{ data: columns }, { data: tasks }, { data: items }] = await Promise.all([
-    board
-      ? supabase.from("task_columns").select("id, name, position").eq("board_id", board.id).order("position")
-      : Promise.resolve({ data: [] as Column[] }),
-    board
-      ? supabase.from("tasks").select("id, title, column_id, description").eq("board_id", board.id).order("position")
-      : Promise.resolve({ data: [] as { id: string; title: string; column_id: string; description: string | null }[] }),
-    board
-      ? supabase.from("task_checklist_items").select("id, task_id, title, done").order("position")
-      : Promise.resolve({ data: [] as { id: string; task_id: string; title: string; done: boolean }[] }),
-  ]);
-
-  const checklistByTask = new Map<string, { id: string; title: string; done: boolean }[]>();
-  for (const item of items ?? []) {
-    const list = checklistByTask.get(item.task_id) ?? [];
-    list.push({ id: item.id, title: item.title, done: item.done });
-    checklistByTask.set(item.task_id, list);
-  }
-
-  const taskList: Task[] = (tasks ?? []).map((t) => ({ ...t, checklist: checklistByTask.get(t.id) ?? [] }));
+  // Sem quadro, não há colunas nem tarefas para buscar.
+  const content = board ? await getBoardContent(supabase, board.id) : null;
+  const columns = (content?.columns.data ?? []) as Column[];
+  const taskList = attachChecklist(content?.tasks.data ?? [], content?.items.data ?? []);
 
   return (
     <div className="flex flex-col gap-8">
@@ -40,7 +31,7 @@ export default async function TarefasPage() {
       <KanbanBoard
         companyId={company.id}
         boardId={board?.id ?? null}
-        columns={(columns ?? []) as Column[]}
+        columns={columns}
         tasks={taskList}
         canManage={canManage}
       />

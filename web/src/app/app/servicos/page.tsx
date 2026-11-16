@@ -1,14 +1,17 @@
+// Página de serviços: formulário para cadastrar e lista dos serviços da empresa.
+// A consulta fica em services.
+
 import { ServiceForm } from "@/components/app/service-form";
 import { getCurrentCompany } from "@/lib/company";
+import { getServices } from "@/services/servicos.service";
+import { formatMoney } from "@/mappers/agenda.mapper";
 
+// Entrada: nada além da sessão do usuário.
+// Saída: formulário de cadastro e a lista de serviços.
 export default async function ServicosPage() {
   const { supabase, company } = await getCurrentCompany();
 
-  const { data: services, error: loadError } = await supabase
-    .from("services")
-    .select("id, name, category, description, duration_minutes, price, active")
-    .order("category", { nullsFirst: false })
-    .order("name");
+  const { data: services, error: loadError } = await getServices(supabase);
 
   return (
     <div className="flex flex-col gap-8">
@@ -17,6 +20,7 @@ export default async function ServicosPage() {
         <p className="mt-2 text-sm text-muted-foreground">O que o cliente pode agendar e quanto tempo cada um leva.</p>
       </header>
 
+      {/* Formulário para criar um serviço novo. */}
       <ServiceForm companyId={company.id} />
 
       {loadError ? (
@@ -36,7 +40,7 @@ export default async function ServicosPage() {
                 <p className="mt-1 text-xs text-muted-foreground">{service.duration_minutes} min</p>
               </div>
               <div className="text-right text-sm tabular-nums">
-                {service.price !== null ? `R$ ${Number(service.price).toFixed(2).replace(".", ",")}` : "Sob consulta"}
+                {service.price !== null ? `R$ ${formatMoney(Number(service.price))}` : "Sob consulta"}
               </div>
             </li>
           ))}

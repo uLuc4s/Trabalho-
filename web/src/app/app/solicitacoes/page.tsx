@@ -1,31 +1,19 @@
+// Página de solicitações: pedidos de orçamento ou visita que aguardam decisão, e os já decididos.
+// A consulta fica em services, a separação em mappers e os tipos nos próprios services.
+
 import { ReviewRequest } from "@/components/app/review-request";
 import { formatDateTime, getCurrentCompany } from "@/lib/company";
+import { getServiceRequests } from "@/services/solicitacoes.service";
+import { splitRequests } from "@/mappers/solicitacoes.mapper";
+import { first } from "@/mappers/agenda.mapper";
 
-type Pick<T> = T | T[] | null;
-type Row = {
-  id: string;
-  status: string;
-  created_at: string;
-  preferred_window: string | null;
-  notes: string | null;
-  services: Pick<{ name: string }>;
-  customers: Pick<{ name: string; phone: string }>;
-};
-
-const first = <T,>(value: Pick<T>): T | undefined => (Array.isArray(value) ? value[0] : value ?? undefined);
-
+// Entrada: nada além da sessão do usuário.
+// Saída: lista de solicitações aguardando decisão e as já decididas.
 export default async function SolicitacoesPage() {
   const { supabase } = await getCurrentCompany();
 
-  const { data: rows, error: loadError } = await supabase
-    .from("service_requests")
-    .select("id, status, created_at, preferred_window, notes, services(name), customers(name, phone)")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  const list = (rows ?? []) as Row[];
-  const open = list.filter((r) => r.status === "new" || r.status === "under_review");
-  const decided = list.filter((r) => r.status !== "new" && r.status !== "under_review");
+  const { data: rows, error: loadError } = await getServiceRequests(supabase);
+  const { open, decided } = splitRequests(rows ?? []); // separa aguardando e decididas
 
   return (
     <div className="flex flex-col gap-10">
@@ -34,6 +22,7 @@ export default async function SolicitacoesPage() {
         <p className="mt-2 text-sm text-muted-foreground">Pedidos de orçamento e visita enviados pelos clientes.</p>
       </header>
 
+      {/* Aviso se a consulta falhar. */}
       {loadError && <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar as solicitações. Recarregue a página.</p>}
 
       <section className="flex flex-col gap-3">
@@ -57,6 +46,7 @@ export default async function SolicitacoesPage() {
                     {row.preferred_window && <p className="mt-1 text-sm">Preferência: {row.preferred_window}</p>}
                     {row.notes && <p className="mt-1 text-sm text-muted-foreground">{row.notes}</p>}
                   </div>
+                  {/* Aprovar ou recusar, com confirmação. */}
                   <ReviewRequest requestId={row.id} />
                 </li>
               );

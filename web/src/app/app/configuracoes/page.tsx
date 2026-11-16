@@ -1,16 +1,19 @@
+// Página de configurações: dados da empresa que aparecem para o cliente e regras de atendimento.
+// A consulta fica em services.
+
 import { CompanySettingsForm } from "@/components/app/company-settings-form";
 import { getCurrentCompany } from "@/lib/company";
+import { getCompanySettings } from "@/services/configuracoes.service";
 
+// Entrada: nada além da sessão do usuário.
+// Saída: formulário de configurações, ou apenas leitura para quem não é dono ou admin.
 export default async function ConfiguracoesPage() {
   const { supabase, company, role } = await getCurrentCompany();
-  const canEdit = role === "owner" || role === "admin";
+  const canEdit = role === "owner" || role === "admin"; // só dono e admin alteram
 
-  const { data } = await supabase
-    .from("companies")
-    .select("id, name, slug, description, address, phone, payment_methods, cancellation_hours")
-    .eq("id", company.id)
-    .single();
+  const { data } = await getCompanySettings(supabase, company.id);
 
+  // Sem dados da empresa, não há o que mostrar.
   if (!data) return null;
 
   return (
@@ -21,7 +24,8 @@ export default async function ConfiguracoesPage() {
       </header>
 
       {canEdit ? (
-        <CompanySettingsForm company={data} />
+        // Empresa sem formas de pagamento cadastradas recebe lista vazia, não null.
+        <CompanySettingsForm company={{ ...data, payment_methods: data.payment_methods ?? [] }} />
       ) : (
         <p className="rounded-2xl border border-border bg-background p-6 text-sm text-muted-foreground">
           Somente o dono ou administrador altera as configurações.
