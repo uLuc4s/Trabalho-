@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:db": "node supabase/tests/fundacao.test.mjs"
+    "test:db": "node supabase/tests/fundacao.test.mjs && node supabase/tests/operacoes.test.mjs && node supabase/tests/agendamento_publico.test.mjs && node supabase/tests/funcoes_internas.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.16"
