@@ -3,10 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   CalendarDays,
+  Check,
   ClipboardList,
+  Copy,
   Home,
   Inbox,
   LogOut,
@@ -36,7 +39,28 @@ const HIDDEN_BY_MODEL: Record<string, string[]> = {
   recorrente: ["/app/ordens"],
 };
 
-export function AppSidebar({ companyName, model }: { companyName: string; model: string | null }) {
+function CopyLink({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    await navigator.clipboard.writeText(`${window.location.origin}/e/${slug}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className="flex h-8 items-center justify-center gap-2 rounded-full bg-foreground text-xs font-medium text-background transition-opacity hover:opacity-90"
+    >
+      {copied ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
+      {copied ? "Link copiado" : "Copiar link"}
+    </button>
+  );
+}
+
+export function AppSidebar({ companyName, slug, model }: { companyName: string; slug: string; model: string | null }) {
   const pathname = usePathname();
   const router = useRouter();
   const hidden = HIDDEN_BY_MODEL[model ?? ""] ?? [];
@@ -89,11 +113,17 @@ export function AppSidebar({ companyName, model }: { companyName: string; model:
       <button
         type="button"
         onClick={signOut}
-        className="mt-auto flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
       >
         <LogOut className="h-4 w-4" aria-hidden />
         Sair
       </button>
+
+      <div className="mt-auto flex flex-col gap-2 rounded-xl border border-border bg-secondary/50 p-4">
+        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Sua página de agendamento</p>
+        <p className="truncate text-xs text-foreground">/e/{slug}</p>
+        <CopyLink slug={slug} />
+      </div>
     </aside>
   );
 }
