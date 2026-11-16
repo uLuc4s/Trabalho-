@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, ClipboardList, Inbox, Wallet } from "lucide-react";
+import { ArrowUpRight, CalendarDays, ClipboardList, Inbox, Users, Wallet } from "lucide-react";
 import { BarChart, Donut, type Point } from "@/components/app/charts";
 import { formatTime, getCurrentCompany, todayInSaoPaulo, dayRange } from "@/lib/company";
 
@@ -20,13 +20,16 @@ export default async function AppHomePage() {
   const to = new Date(now.getTime() + 7 * 86400000).toISOString();
   const monthStart = `${today.slice(0, 8)}01T00:00:00-03:00`;
 
-  const [todayRes, pendingRes, orderRows, windowRes, monthRes, nextRes] = await Promise.all([
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
+  const [todayRes, pendingRes, orderRows, windowRes, monthRes, nextRes, customersRes, activeRows] = await Promise.all([
     supabase.from("appointments").select("id", { count: "exact", head: true }).gte("starts_at", day.start).lte("starts_at", day.end).neq("status", "cancelled"),
     supabase.from("service_requests").select("id", { count: "exact", head: true }).in("status", ["new", "under_review"]),
     supabase.from("work_orders").select("status"),
     supabase.from("appointments").select("starts_at, status, services(price, name), customers(name)").gte("starts_at", from).lte("starts_at", to).neq("status", "cancelled"),
     supabase.from("appointments").select("starts_at, services(price)").gte("starts_at", monthStart).neq("status", "cancelled"),
     supabase.from("appointments").select("id, starts_at, services(name), customers(name)").gte("starts_at", now.toISOString()).neq("status", "cancelled").order("starts_at").limit(6),
+    supabase.from("customers").select("id", { count: "exact", head: true }),
+    supabase.from("appointments").select("customer_id").gte("starts_at", thirtyDaysAgo).neq("status", "cancelled"),
   ]);
 
   // Atendimentos por dia (últimos 14 dias + próximos 7)
@@ -56,14 +59,35 @@ export default async function AppHomePage() {
 
   type Next = { starts_at: string; services: Pick<{ name: string }>; customers: Pick<{ name: string }> };
   const next = (nextRes.data ?? []) as Next[];
+  const openOrdersCount = (orderRows.data ?? []).filter((o: { status: string }) => ["open", "scheduled", "in_progress"].includes(o.status)).length;
+  const customersTotal = customersRes.count ?? 0;
+  const activeCustomers = new Set(((activeRows.data ?? []) as { customer_id: string }[]).map((r) => r.customer_id)).size;
   const weekTotal = barData.slice(-7).reduce((acc, d) => acc + d.value, 0);
 
-  const kpis = [
-    { label: "Hoje", value: String(todayRes.count ?? 0), hint: "atendimentos", href: "/app/agenda", icon: CalendarDays },
-    { label: "Próximos 7 dias", value: String(weekTotal), hint: "atendimentos", href: "/app/agenda", icon: CalendarDays },
-    { label: "Receita prevista", value: money(revenue), hint: "neste mês", href: "/app/relatorios", icon: Wallet },
-    { label: "Solicitações", value: String(pendingRes.count ?? 0), hint: "aguardando", href: "/app/solicitacoes", icon: Inbox },
-  ];
+  const model = company.business_model;
+  const fieldWork = model === "campo" || model === "orcamento";
+  const recurring = model === "recorrente";
+
+  const kpis = fieldWork
+    ? [
+        { label: "Visitas hoje", value: String(todayRes.count ?? 0), hint: "atendimentos", href: "/app/agenda", icon: CalendarDays },
+        { label: "Ordens em andamento", value: String(openOrdersCount), hint: "abertas ou em execução", href: "/app/ordens", icon: ClipboardList },
+        { label: "Solicitações", value: String(pendingRes.count ?? 0), hint: "aguardando resposta", href: "/app/solicitacoes", icon: Inbox },
+        { label: "Receita prevista", value: money(revenue), hint: "neste mês", href: "/app/agenda", icon: Wallet },
+      ]
+    : recurring
+      ? [
+          { label: "Visitas hoje", value: String(todayRes.count ?? 0), hint: "da rotina", href: "/app/agenda", icon: CalendarDays },
+          { label: "Próximos 7 dias", value: String(weekTotal), hint: "visitas", href: "/app/agenda", icon: CalendarDays },
+          { label: "Clientes fixos", value: String(customersTotal), hint: "na base", href: "/app/agenda", icon: Users },
+          { label: "Receita prevista", value: money(revenue), hint: "neste mês", href: "/app/agenda", icon: Wallet },
+        ]
+      : [
+          { label: "Hoje", value: String(todayRes.count ?? 0), hint: "atendimentos", href: "/app/agenda", icon: CalendarDays },
+          { label: "Próximos 7 dias", value: String(weekTotal), hint: "atendimentos", href: "/app/agenda", icon: CalendarDays },
+          { label: "Clientes para reativar", value: String(Math.max(0, customersTotal - activeCustomers)), hint: "sem atendimento há 30 dias", href: "/app/agenda", icon: Users },
+          { label: "Receita prevista", value: money(revenue), hint: "neste mês", href: "/app/agenda", icon: Wallet },
+        ];
 
   return (
     <div className="flex flex-col gap-8">

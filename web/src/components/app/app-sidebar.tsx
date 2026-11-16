@@ -27,9 +27,18 @@ const items = [
   { href: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];
 
-export function AppSidebar({ companyName }: { companyName: string }) {
+const HIDDEN_BY_MODEL: Record<string, string[]> = {
+  balcao: ["/app/solicitacoes", "/app/ordens"],
+  campo: [],
+  orcamento: [],
+  recorrente: ["/app/ordens"],
+};
+
+export function AppSidebar({ companyName, model }: { companyName: string; model: string | null }) {
   const pathname = usePathname();
   const router = useRouter();
+  const hidden = HIDDEN_BY_MODEL[model ?? ""] ?? [];
+  const visibleItems = items.filter((item) => !hidden.includes(item.href));
 
   async function signOut() {
     const supabase = createClient();
@@ -50,7 +59,7 @@ export function AppSidebar({ companyName }: { companyName: string }) {
       </div>
 
       <nav aria-label="Painel" className="flex flex-col gap-1">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const active = item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href);
           return (
             <Link

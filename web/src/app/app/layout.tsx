@@ -8,7 +8,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-secondary/30 text-foreground">
-      <AppSidebar companyName={company.name} />
+      <AppSidebar companyName={company.name} model={company.business_model} />
       <main className="min-w-0 flex-1 p-6 md:p-10">{children}</main>
     </div>
   );
