@@ -49,7 +49,7 @@ export function OnboardingForm() {
       return;
     }
 
-    router.push("/app");
+    router.push("/onboarding/modelo");
     router.refresh();
   }
 

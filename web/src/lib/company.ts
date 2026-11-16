@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export type Company = { id: string; name: string; slug: string; timezone: string };
+export type BusinessModel = "balcao" | "campo" | "orcamento" | "recorrente";
+export type Company = { id: string; name: string; slug: string; timezone: string; business_model: BusinessModel | null };
 export type Role = "owner" | "admin" | "member" | "viewer";
 
 export async function getCurrentCompany() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("company_members")
-    .select("role, companies(id, name, slug, timezone)")
+    .select("role, companies(id, name, slug, timezone, business_model)")
     .eq("status", "active")
     .limit(1)
     .maybeSingle();

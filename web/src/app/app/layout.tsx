@@ -1,8 +1,10 @@
 import { AppSidebar } from "@/components/app/app-sidebar";
+import { redirect } from "next/navigation";
 import { getCurrentCompany } from "@/lib/company";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { company } = await getCurrentCompany();
+  const { company, role } = await getCurrentCompany();
+  if (!company.business_model && (role === "owner" || role === "admin")) redirect("/onboarding/modelo");
 
   return (
     <div className="flex min-h-screen bg-secondary/30 text-foreground">
