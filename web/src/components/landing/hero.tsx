@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Play, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { DashboardPreview } from "./dashboard-preview";
 
 const fadeUp = (y: number, delay: number, duration: number) => ({
@@ -49,9 +50,10 @@ export function Hero() {
         <motion.div {...fadeUp(16, 0.3, 0.6)} className="mt-5 flex items-center gap-3">
           <Link
             href="/cadastro"
-            className={buttonVariants({
-              className: "rounded-full bg-accent px-6 py-5 font-body text-sm font-medium text-accent-foreground hover:bg-accent/90",
-            })}
+            className={cn(
+              buttonVariants(),
+              "rounded-full bg-accent px-6 py-5 font-body text-sm font-medium text-accent-foreground hover:bg-accent/90",
+            )}
           >
             Criar conta grátis
           </Link>
