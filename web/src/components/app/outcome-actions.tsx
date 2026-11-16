@@ -69,6 +69,7 @@ export function OutcomeActions({ appointmentId, defaultAmount }: { appointmentId
             type="button"
             disabled={!method || pending}
             onClick={() => {
+              if (amount.trim() === "") return setError("Informe o valor recebido.");
               const value = Number(amount.replace(",", "."));
               if (Number.isNaN(value) || value < 0) return setError("Valor inválido.");
               send("completed", method, value);
