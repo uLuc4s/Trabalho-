@@ -16,7 +16,7 @@ export default async function ClientesPage({
   const { supabase, role } = await getCurrentCompany();
   const canManage = role === "owner" || role === "admin";
 
-  const [{ data: customers }, { data: appointments }] = await Promise.all([
+  const [{ data: customers, error: customersError }, { data: appointments, error: appointmentsError }] = await Promise.all([
     supabase.from("customers").select("id, name, phone, email").order("name"),
     supabase.from("appointments").select("customer_id, starts_at, status"),
   ]);
@@ -84,7 +84,9 @@ export default async function ClientesPage({
         </Link>
       </div>
 
-      {list.length === 0 ? (
+      {customersError || appointmentsError ? (
+        <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar os clientes. Recarregue a página.</p>
+      ) : list.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           {term || onlyInactive ? "Nenhum cliente com esse filtro." : "Nenhum cliente ainda. Eles aparecem quando agendam pela sua página."}
         </div>

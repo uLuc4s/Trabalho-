@@ -19,7 +19,7 @@ export default async function RelatoriosPage() {
   const today = todayInSaoPaulo();
   const monthStart = `${today.slice(0, 8)}01T00:00:00-03:00`;
 
-  const { data } = await supabase
+  const { data, error: loadError } = await supabase
     .from("appointments")
     .select("starts_at, status, payment_method, amount_paid, services(name)")
     .gte("starts_at", monthStart);
@@ -58,6 +58,8 @@ export default async function RelatoriosPage() {
         <h1 className="font-display text-5xl tracking-tight">Relatórios</h1>
         <p className="mt-2 text-sm text-muted-foreground">Mês atual. {pending} atendimentos ainda aguardam fechamento.</p>
       </header>
+
+      {loadError && <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar os dados do mês. Recarregue a página.</p>}
 
       <section className="grid gap-4 md:grid-cols-4">
         {kpis.map((k) => (

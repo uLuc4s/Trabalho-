@@ -55,7 +55,7 @@ export default async function AgendaPage({
   const nextMonth = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`;
   const monthEnd = `${nextMonth}T00:00:00-03:00`;
 
-  const [{ data: rows }, { data: monthRows }] = await Promise.all([
+  const [{ data: rows, error: rowsError }, { data: monthRows, error: monthError }] = await Promise.all([
     supabase
       .from("appointments")
       .select("id, starts_at, ends_at, status, payment_method, amount_paid, details, services(name, price), employees(display_name), customers(name, phone)")
@@ -127,7 +127,11 @@ export default async function AgendaPage({
           <h2 className="text-sm font-medium text-muted-foreground">Atendimentos do dia · {active.length} ativos</h2>
           {expected > 0 && <p className="text-sm tabular-nums text-muted-foreground">Previsto: R$ {expected.toFixed(2).replace(".", ",")}</p>}
         </div>
-        {list.length === 0 ? (
+        {rowsError || monthError ? (
+          <div className="rounded-2xl border border-dashed border-destructive/40 p-10 text-center text-sm text-destructive">
+            Não foi possível carregar a agenda. Recarregue a página.
+          </div>
+        ) : list.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
             Nenhum atendimento neste dia.
           </div>

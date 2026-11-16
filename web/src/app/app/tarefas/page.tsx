@@ -5,7 +5,7 @@ export default async function TarefasPage() {
   const { supabase, company, role } = await getCurrentCompany();
   const canManage = role === "owner" || role === "admin";
 
-  const { data: board } = await supabase.from("task_boards").select("id").order("created_at").limit(1).maybeSingle();
+  const { data: board, error: boardError } = await supabase.from("task_boards").select("id").order("created_at").limit(1).maybeSingle();
 
   const [{ data: columns }, { data: tasks }, { data: items }] = await Promise.all([
     board
@@ -34,6 +34,8 @@ export default async function TarefasPage() {
         <h1 className="font-display text-5xl tracking-tight">Tarefas</h1>
         <p className="mt-2 text-sm text-muted-foreground">Organize o que precisa ser feito. Arraste os cards entre as colunas e marque o checklist.</p>
       </header>
+
+      {boardError && <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar o quadro. Recarregue a página.</p>}
 
       <KanbanBoard
         companyId={company.id}

@@ -17,7 +17,7 @@ const first = <T,>(value: Pick<T>): T | undefined => (Array.isArray(value) ? val
 export default async function SolicitacoesPage() {
   const { supabase } = await getCurrentCompany();
 
-  const { data: rows } = await supabase
+  const { data: rows, error: loadError } = await supabase
     .from("service_requests")
     .select("id, status, created_at, preferred_window, notes, services(name), customers(name, phone)")
     .order("created_at", { ascending: false })
@@ -33,6 +33,8 @@ export default async function SolicitacoesPage() {
         <h1 className="font-display text-5xl tracking-tight">Solicitações</h1>
         <p className="mt-2 text-sm text-muted-foreground">Pedidos de orçamento e visita enviados pelos clientes.</p>
       </header>
+
+      {loadError && <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar as solicitações. Recarregue a página.</p>}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-muted-foreground">Aguardando decisão · {open.length}</h2>

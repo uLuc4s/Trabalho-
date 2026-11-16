@@ -23,7 +23,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function OrdensPage() {
   const { supabase } = await getCurrentCompany();
 
-  const { data: rows } = await supabase
+  const { data: rows, error: loadError } = await supabase
     .from("work_orders")
     .select("id, title, status, created_at, customers(name)")
     .order("created_at", { ascending: false })
@@ -59,7 +59,9 @@ export default async function OrdensPage() {
         <p className="mt-2 text-sm text-muted-foreground">Acompanhe cada etapa do trabalho até a conclusão.</p>
       </header>
 
-      {list.length === 0 ? (
+      {loadError ? (
+        <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar as ordens. Recarregue a página.</p>
+      ) : list.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           Nenhuma ordem ainda. Aprove uma solicitação para abrir a primeira.
         </div>

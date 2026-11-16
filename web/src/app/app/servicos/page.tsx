@@ -4,7 +4,7 @@ import { getCurrentCompany } from "@/lib/company";
 export default async function ServicosPage() {
   const { supabase, company } = await getCurrentCompany();
 
-  const { data: services } = await supabase
+  const { data: services, error: loadError } = await supabase
     .from("services")
     .select("id, name, category, description, duration_minutes, price, active")
     .order("category", { nullsFirst: false })
@@ -19,7 +19,9 @@ export default async function ServicosPage() {
 
       <ServiceForm companyId={company.id} />
 
-      {!services || services.length === 0 ? (
+      {loadError ? (
+        <p className="rounded-2xl border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar os serviços. Recarregue a página.</p>
+      ) : !services || services.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           Nenhum serviço cadastrado ainda.
         </div>
