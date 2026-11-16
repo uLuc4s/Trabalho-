@@ -1,26 +1,32 @@
+// Formulário para cadastrar um serviço: nome, categoria, descrição, duração e preço opcional.
+// Lê os campos pelo FormData, valida no navegador e grava na tabela services.
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Loader2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation"; // atualiza a lista depois de gravar
+import { useState, useTransition } from "react"; // estado e transição de envio
+import { Loader2, Plus } from "lucide-react"; // ícones
+import { Button } from "@/components/ui/button"; // botão padrão
+import { Input } from "@/components/ui/input"; // campo padrão
+import { Label } from "@/components/ui/label"; // rótulo padrão
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Entrada: id da empresa dona do serviço.
+// Saída: formulário de cadastro. Limpa os campos e atualiza a lista depois de salvar.
 export function ServiceForm({ companyId }: { companyId: string }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition(); // true enquanto grava
   const [error, setError] = useState<string | null>(null);
 
+  // Valida os campos e grava. Regras: nome com 2+ caracteres, duração inteira positiva, preço não negativo.
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
+    const form = event.currentTarget; // guarda o formulário para limpar depois
     const data = new FormData(form);
     const name = String(data.get("name") ?? "").trim();
-    const category = String(data.get("category") ?? "").trim() || null;
+    const category = String(data.get("category") ?? "").trim() || null; // vazio vira null
     const description = String(data.get("description") ?? "").trim() || null;
     const duration = Number(data.get("duration"));
+    // Aceita vírgula como separador decimal. Campo vazio significa sem preço (sob consulta).
     const priceRaw = String(data.get("price") ?? "").replace(",", ".").trim();
     const price = priceRaw === "" ? null : Number(priceRaw);
 
@@ -43,8 +49,8 @@ export function ServiceForm({ companyId }: { companyId: string }) {
         setError("Não foi possível salvar o serviço.");
         return;
       }
-      form.reset();
-      router.refresh();
+      form.reset(); // limpa os campos
+      router.refresh(); // mostra o novo serviço na lista
     });
   }
 
@@ -58,6 +64,7 @@ export function ServiceForm({ companyId }: { companyId: string }) {
         <Label htmlFor="service-category">Categoria</Label>
         <Input id="service-category" name="category" placeholder="Cabelo, Barba, Instalação" />
       </div>
+      {/* Descrição ocupa as três colunas de cima no computador. */}
       <div className="flex flex-col gap-2 md:col-span-3">
         <Label htmlFor="service-description">Descrição (o que está incluso)</Label>
         <Input id="service-description" name="description" placeholder="Corte na tesoura ou máquina, finalização com pomada" />

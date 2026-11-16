@@ -1,11 +1,15 @@
+// Fluxo de agendamento público em 4 passos: serviço, profissional e dia, horário e seus dados.
+// Não exige login. Ao confirmar, mostra o link para consultar ou cancelar o agendamento.
+// Roda no navegador porque tem seleção, consultas de horário e envio.
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { AlertCircle, ArrowLeft, Check, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
+import Link from "next/link"; // link para a consulta do agendamento
+import { useEffect, useMemo, useState, useTransition } from "react"; // estado, efeitos, cálculo memorizado e transição
+import { AlertCircle, ArrowLeft, Check, Loader2 } from "lucide-react"; // ícones
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { cn } from "@/lib/utils"; // junta classes CSS
 
+// Serviço como a página pública recebe.
 type Service = {
   id: string;
   name: string;
@@ -14,55 +18,69 @@ type Service = {
   duration_minutes: number;
   price: number | null;
 };
+// Profissional como a página pública recebe.
 type Employee = { id: string; display_name: string };
+// Dados públicos da empresa usados pelo fluxo.
 type Info = { name: string; timezone: string; segment: string | null; services: Service[]; employees: Employee[] };
 
+// Áreas de atuação para o caso de advocacia.
 const LEGAL_AREAS = ["Trabalhista", "Civil", "Família", "Criminal", "Empresarial", "Outra"];
+// Um horário livre devolvido pelo banco: início e profissional.
 type Slot = { slot_start: string; slot_employee_id: string };
 
+// Quantos dias à frente o cliente pode escolher.
 const DAYS_AHEAD = 14;
 
+// Converte uma data em AAAA-MM-DD no fuso de São Paulo.
 function isoDate(d: Date) {
   return d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 }
 
+// Formata o preço em reais, ou "Sob consulta" se não houver preço.
 function formatPrice(value: number | null) {
   return value === null ? "Sob consulta" : `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
 }
 
+// Entrada: endereço da empresa e informações públicas (serviços, profissionais e segmento).
+// Saída: o fluxo em passos, ou a confirmação com o link do agendamento.
 export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
-  const [serviceId, setServiceId] = useState<string | null>(null);
-  const [employeeId, setEmployeeId] = useState<string | "any">("any");
-  const [date, setDate] = useState<string | null>(null);
-  const [slots, setSlots] = useState<Slot[] | null>(null);
-  const [chosenSlot, setChosenSlot] = useState<Slot | null>(null);
-  const [name, setName] = useState("");
+  const [serviceId, setServiceId] = useState<string | null>(null); // serviço escolhido
+  const [employeeId, setEmployeeId] = useState<string | "any">("any"); // profissional escolhido, ou qualquer um
+  const [date, setDate] = useState<string | null>(null); // dia escolhido, em AAAA-MM-DD
+  const [slots, setSlots] = useState<Slot[] | null>(null); // horários livres; null = ainda carregando
+  const [chosenSlot, setChosenSlot] = useState<Slot | null>(null); // horário escolhido
+  const [name, setName] = useState(""); // dados do cliente
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [plate, setPlate] = useState("");
-  const [vehicle, setVehicle] = useState("");
-  const [vehicleYear, setVehicleYear] = useState("");
-  const [legalArea, setLegalArea] = useState("");
+  const [consent, setConsent] = useState(false); // aceite do uso dos dados (LGPD)
+  const [plate, setPlate] = useState(""); // placa, só para oficina
+  const [vehicle, setVehicle] = useState(""); // modelo do veículo, só para oficina
+  const [vehicleYear, setVehicleYear] = useState(""); // ano do veículo, opcional
+  const [legalArea, setLegalArea] = useState(""); // área do caso, só para advocacia
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ token: string; startsAt: string } | null>(null);
+  const [done, setDone] = useState<{ token: string; startsAt: string } | null>(null); // agendamento criado
   const [submitting, startSubmit] = useTransition();
 
+  // Serviço escolhido, ou null se ainda não escolheu.
   const service = info.services.find((s) => s.id === serviceId) ?? null;
 
+  // Troca o profissional e limpa o horário, porque a lista de horários muda.
   function pickEmployee(id: string | "any") {
     setEmployeeId(id);
     setSlots(null);
     setChosenSlot(null);
   }
 
+  // Troca o dia e limpa o horário, porque a lista de horários muda.
   function pickDate(value: string) {
     setDate(value);
     setSlots(null);
     setChosenSlot(null);
   }
+  // Nome do profissional a partir do id.
   const employeeName = (id: string) => info.employees.find((e) => e.id === id)?.display_name ?? "";
 
+  // Lista dos próximos 14 dias, começando amanhã. Calculada uma vez.
   const days = useMemo(() => {
     const list: Date[] = [];
     const base = new Date();
@@ -74,6 +92,8 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
     return list;
   }, []);
 
+  // Quando serviço, dia ou profissional mudam, busca os horários livres no banco.
+  // A flag "active" descarta respostas antigas se o usuário trocar de opção rápido.
   useEffect(() => {
     if (!serviceId || !date) return;
     let active = true;
@@ -82,10 +102,10 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
         p_slug: slug,
         p_service_id: serviceId,
         p_date: date,
-        p_employee_id: employeeId === "any" ? null : employeeId,
+        p_employee_id: employeeId === "any" ? null : employeeId, // null = qualquer profissional
       })
       .then(({ data, error: rpcError }) => {
-        if (!active) return;
+        if (!active) return; // resposta de uma escolha antiga, ignora
         if (rpcError) {
           setError("Não foi possível carregar os horários.");
           setSlots([]);
@@ -99,6 +119,8 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
     };
   }, [slug, serviceId, date, employeeId]);
 
+  // Confirma o agendamento: valida os dados, monta os detalhes do segmento e envia.
+  // Regras: nome, telefone com DDD, aceite e, conforme o segmento, placa e modelo (oficina) ou área (advocacia).
   function confirm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!service || !chosenSlot) return;
@@ -107,8 +129,10 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
     if (phone.replace(/\D/g, "").length < 10) return setError("Informe um telefone com DDD.");
     if (!consent) return setError("Aceite o uso dos seus dados para confirmar.");
 
+    // Dados extras do segmento. Vão para a coluna details do agendamento.
     let details: Record<string, string> | null = null;
     if (info.segment === "oficina") {
+      // Placa com pelo menos 7 caracteres (ABC1D23 ou ABC1234), sem contar hífen ou espaço.
       if (plate.replace(/[^a-zA-Z0-9]/g, "").length < 7) return setError("Informe a placa do veículo.");
       if (vehicle.trim().length < 2) return setError("Informe o modelo do veículo.");
       details = { placa: plate.toUpperCase(), veiculo: vehicle.trim(), ano: vehicleYear.trim() };
@@ -130,6 +154,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
         p_details: details,
       });
       if (rpcError) {
+        // Se outra pessoa pegou o horário no meio do caminho, explica e pede outro.
         setError(
           rpcError.message.includes("indisponível")
             ? "Esse horário acabou de ser marcado. Escolha outro."
@@ -143,6 +168,8 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
     });
   }
 
+  // Tela de confirmação: data por extenso e link para consultar ou cancelar.
+  // ATENÇÃO: o token vai na URL, pode aparecer em histórico e logs de acesso.
   if (done) {
     const when = new Date(done.startsAt).toLocaleString("pt-BR", {
       weekday: "long",
@@ -174,10 +201,12 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
     );
   }
 
+  // Passo atual, para destacar o título da etapa: 1 serviço, 2 dia, 3 horário, 4 dados.
   const step = !serviceId ? 1 : !date ? 2 : !chosenSlot ? 3 : 4;
 
   return (
     <div className="flex flex-col gap-10">
+      {/* Passo 1: serviço. Escolher outro serviço zera as escolhas seguintes. */}
       <section className="flex flex-col gap-3">
         <StepLabel n={1} label="Serviço" active={step === 1} done={!!serviceId} />
         <div className="grid gap-3 md:grid-cols-2">
@@ -208,6 +237,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
         </div>
       </section>
 
+      {/* Passo 2: profissional e dia. Só aparece depois do serviço. */}
       {serviceId && (
         <section className="flex flex-col gap-3">
           <StepLabel n={2} label="Profissional e dia" active={step === 2} done={!!date} />
@@ -221,6 +251,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
               </Chip>
             ))}
           </div>
+          {/* Faixa horizontal com os próximos dias. Rola na horizontal no celular. */}
           <div className="flex gap-2 overflow-x-auto pb-2">
             {days.map((d) => {
               const value = isoDate(d);
@@ -237,6 +268,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
         </section>
       )}
 
+      {/* Passo 3: horário. Mostra carregamento, mensagem de dia vazio ou a grade de horários. */}
       {date && (
         <section className="flex flex-col gap-3">
           <StepLabel n={3} label="Horário" active={step === 3} done={!!chosenSlot} />
@@ -248,6 +280,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
             <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
               {slots.map((slot) => {
                 const time = new Date(slot.slot_start).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+                // Marca como escolhido só se for o mesmo horário E o mesmo profissional.
                 const selected = chosenSlot?.slot_start === slot.slot_start && chosenSlot?.slot_employee_id === slot.slot_employee_id;
                 return (
                   <button
@@ -260,6 +293,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
                     )}
                   >
                     {time}
+                    {/* Com "qualquer um", mostra o nome de quem atende naquele horário. */}
                     {employeeId === "any" && (
                       <span className={cn("mt-0.5 text-[10px]", selected ? "opacity-80" : "text-muted-foreground")}>
                         {employeeName(slot.slot_employee_id)}
@@ -273,6 +307,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
         </section>
       )}
 
+      {/* Passo 4: dados do cliente e campos do segmento. */}
       {chosenSlot && (
         <section className="flex flex-col gap-4">
           <StepLabel n={4} label="Seus dados" active={step === 4} done={false} />
@@ -286,6 +321,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
             <Field label="E-mail (opcional)">
               <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" className={inputClass} />
             </Field>
+            {/* Campos da oficina: veículo. */}
             {info.segment === "oficina" && (
               <>
                 <Field label="Placa do veículo">
@@ -299,6 +335,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
                 </Field>
               </>
             )}
+            {/* Campo da advocacia: área do caso. */}
             {info.segment === "advocacia" && (
               <Field label="Área do caso">
                 <select value={legalArea} onChange={(e) => setLegalArea(e.target.value)} className={inputClass}>
@@ -339,6 +376,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
         </section>
       )}
 
+      {/* Erro de carregamento de horários, quando não há horário escolhido. */}
       {!chosenSlot && error && (
         <p role="alert" className="text-sm text-destructive">
           {error}
@@ -348,9 +386,11 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
   );
 }
 
+// Classe comum aos campos deste fluxo.
 const inputClass =
   "h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground transition-colors focus:border-accent focus:outline-none";
 
+// Campo com rótulo acima. Entrada: texto do rótulo e o campo. Saída: a caixa com rótulo.
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-2 text-sm">
@@ -360,6 +400,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+// Botão tipo "chip" usado para profissional e dia. Entrada: se está ativo, ação e conteúdo.
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -375,6 +416,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
+// Título de cada passo, com número ou check quando concluído.
 function StepLabel({ n, label, active, done }: { n: number; label: string; active: boolean; done: boolean }) {
   return (
     <p className={cn("flex items-center gap-2 text-xs uppercase tracking-[0.18em]", active || done ? "text-foreground" : "text-muted-foreground")}>
