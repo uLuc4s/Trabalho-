@@ -1,0 +1,35 @@
+# Integração contínua: roda a cada push e pull request.
+# Falha se o banco, os tipos, o lint ou os testes do web quebrarem.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  banco:
+    name: Testes do banco (PGlite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run test:db
+
+  web:
+    name: Web (lint, tipos e testes)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm test
