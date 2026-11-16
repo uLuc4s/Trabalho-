@@ -15,7 +15,9 @@ type Service = {
   price: number | null;
 };
 type Employee = { id: string; display_name: string };
-type Info = { name: string; timezone: string; services: Service[]; employees: Employee[] };
+type Info = { name: string; timezone: string; segment: string | null; services: Service[]; employees: Employee[] };
+
+const LEGAL_AREAS = ["Trabalhista", "Civil", "Família", "Criminal", "Empresarial", "Outra"];
 type Slot = { slot_start: string; slot_employee_id: string };
 
 const DAYS_AHEAD = 14;
@@ -38,6 +40,10 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
+  const [plate, setPlate] = useState("");
+  const [vehicle, setVehicle] = useState("");
+  const [vehicleYear, setVehicleYear] = useState("");
+  const [legalArea, setLegalArea] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ token: string; startsAt: string } | null>(null);
   const [submitting, startSubmit] = useTransition();
@@ -101,6 +107,17 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
     if (phone.replace(/\D/g, "").length < 10) return setError("Informe um telefone com DDD.");
     if (!consent) return setError("Aceite o uso dos seus dados para confirmar.");
 
+    let details: Record<string, string> | null = null;
+    if (info.segment === "oficina") {
+      if (plate.replace(/[^a-zA-Z0-9]/g, "").length < 7) return setError("Informe a placa do veículo.");
+      if (vehicle.trim().length < 2) return setError("Informe o modelo do veículo.");
+      details = { placa: plate.toUpperCase(), veiculo: vehicle.trim(), ano: vehicleYear.trim() };
+    }
+    if (info.segment === "advocacia") {
+      if (!legalArea) return setError("Escolha a área do seu caso.");
+      details = { area: legalArea };
+    }
+
     startSubmit(async () => {
       const { data, error: rpcError } = await createClient().rpc("public_create_booking", {
         p_slug: slug,
@@ -110,6 +127,7 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
         p_name: name.trim(),
         p_phone: phone,
         p_email: email.trim() || null,
+        p_details: details,
       });
       if (rpcError) {
         setError(
@@ -268,6 +286,31 @@ export function BookingFlow({ slug, info }: { slug: string; info: Info }) {
             <Field label="E-mail (opcional)">
               <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" className={inputClass} />
             </Field>
+            {info.segment === "oficina" && (
+              <>
+                <Field label="Placa do veículo">
+                  <input value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="ABC1D23" className={inputClass} />
+                </Field>
+                <Field label="Modelo">
+                  <input value={vehicle} onChange={(e) => setVehicle(e.target.value)} placeholder="Gol 1.6" className={inputClass} />
+                </Field>
+                <Field label="Ano (opcional)">
+                  <input value={vehicleYear} onChange={(e) => setVehicleYear(e.target.value)} placeholder="2016" className={inputClass} />
+                </Field>
+              </>
+            )}
+            {info.segment === "advocacia" && (
+              <Field label="Área do caso">
+                <select value={legalArea} onChange={(e) => setLegalArea(e.target.value)} className={inputClass}>
+                  <option value="">Escolha</option>
+                  {LEGAL_AREAS.map((area) => (
+                    <option key={area} value={area}>
+                      {area}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
             <label className="flex items-start gap-3 text-sm text-muted-foreground md:col-span-2">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
               Concordo que a empresa use meu nome e telefone para este agendamento e os avisos dele.

@@ -9,6 +9,7 @@ type Info = {
   description: string | null;
   address: string | null;
   phone: string | null;
+  segment: string | null;
   payment_methods: string[];
   timezone: string;
   services: {

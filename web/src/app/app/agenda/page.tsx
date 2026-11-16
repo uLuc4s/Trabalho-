@@ -13,6 +13,7 @@ type Row = {
   status: string;
   payment_method: string | null;
   amount_paid: number | null;
+  details: { placa?: string; veiculo?: string; ano?: string; area?: string } | null;
   services: Pick<{ name: string; price: number | null }>;
   employees: Pick<{ display_name: string }>;
   customers: Pick<{ name: string; phone: string }>;
@@ -57,7 +58,7 @@ export default async function AgendaPage({
   const [{ data: rows }, { data: monthRows }] = await Promise.all([
     supabase
       .from("appointments")
-      .select("id, starts_at, ends_at, status, payment_method, amount_paid, services(name, price), employees(display_name), customers(name, phone)")
+      .select("id, starts_at, ends_at, status, payment_method, amount_paid, details, services(name, price), employees(display_name), customers(name, phone)")
       .gte("starts_at", range.start)
       .lte("starts_at", range.end)
       .order("starts_at"),
@@ -143,6 +144,11 @@ export default async function AgendaPage({
                       {sensitive ? "Atendimento" : service?.name} · {employee?.display_name}
                       {!sensitive && ` · ${customer?.phone}`}
                     </p>
+                    {!sensitive && row.details?.placa && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Veículo: {row.details.veiculo} {row.details.ano ? `(${row.details.ano})` : ""} · Placa {row.details.placa}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col items-start gap-2 md:items-end">
                     <div className="flex items-center gap-3">
