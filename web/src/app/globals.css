@@ -19,6 +19,7 @@
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-border: hsl(var(--border));
   --color-ring: hsl(var(--ring));
+  --color-destructive: hsl(var(--destructive));
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -42,6 +43,7 @@
   --accent-foreground: 0 0% 100%;
   --border: 0 0% 90%;
   --ring: 239 84% 67%;
+  --destructive: 0 72% 51%;
   --radius: 0.5rem;
 }
 
