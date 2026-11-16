@@ -41,3 +41,23 @@ test("describeEvent traduz a mudança de status para o texto da tela", () => {
   });
   assert.equal(text, "Aberta → Em execução");
 });
+
+test("describeEvent usa o código quando não há tradução do status", () => {
+  const text = describeEvent({
+    work_order_id: "o1",
+    event_type: "status_changed",
+    payload: { from: "pausada", to: "open" },
+    created_at: "2026-11-16T10:00:00Z",
+  });
+  assert.equal(text, "pausada → Aberta");
+});
+
+test("describeEvent trata evento de mudança sem origem ou destino", () => {
+  const text = describeEvent({ work_order_id: "o1", event_type: "status_changed", payload: {}, created_at: "2026-11-16T10:00:00Z" });
+  assert.equal(text, "— → —");
+});
+
+test("groupEventsByOrder cria lista nova para cada ordem", () => {
+  const grouped = groupEventsByOrder([]);
+  assert.equal(grouped.size, 0);
+});

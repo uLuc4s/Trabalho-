@@ -74,3 +74,19 @@ test("formatBRL usa separador de milhar e vírgula decimal", () => {
   assert.equal(formatBRL(1500), "R$ 1.500,00");
   assert.equal(formatBRL(0), "R$ 0,00");
 });
+
+test("buildReport usa o código quando a forma de pagamento não tem tradução", () => {
+  const report = buildReport([row({ payment_method: "boleto", amount_paid: 80 })]);
+  assert.deepEqual(report.byMethod, [{ label: "boleto", value: 80 }]);
+});
+
+test("buildReport trata valor pago nulo como zero", () => {
+  const report = buildReport([row({ payment_method: "pix", amount_paid: null })]);
+  assert.equal(report.revenue, 0);
+  assert.deepEqual(report.byMethod, [{ label: "Pix", value: 0 }]);
+});
+
+test("buildReport nomeia como 'Sem nome' o atendimento sem serviço", () => {
+  const report = buildReport([row({ services: null })]);
+  assert.deepEqual(report.topServices, [["Sem nome", 1]]);
+});

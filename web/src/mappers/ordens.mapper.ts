@@ -41,7 +41,8 @@ export function buildVehicleByOrder(rows: LinkedAppointmentRowDTO[]): Map<string
 // Saída: "Ordem criada" ou "Aberta → Programada", conforme o tipo do evento.
 export function describeEvent(event: WorkOrderEventDTO): string {
   if (event.event_type === "created") return "Ordem criada";
-  const from = STATUS_LABEL[event.payload.from ?? ""] ?? event.payload.from;
-  const to = STATUS_LABEL[event.payload.to ?? ""] ?? event.payload.to;
+  // Sem status anterior ou novo, mostra um traço em vez de "undefined".
+  const from = STATUS_LABEL[event.payload.from ?? ""] ?? event.payload.from ?? "—";
+  const to = STATUS_LABEL[event.payload.to ?? ""] ?? event.payload.to ?? "—";
   return `${from} → ${to}`;
 }
