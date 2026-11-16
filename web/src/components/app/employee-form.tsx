@@ -1,21 +1,26 @@
+// Formulário para cadastrar um profissional (quem atende). Só pede o nome; serviços e horários vêm depois.
+// Roda no navegador porque tem envio e chamada ao Supabase.
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Loader2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation"; // atualiza a lista depois de cadastrar
+import { useState, useTransition } from "react"; // estado e transição de envio
+import { Loader2, Plus } from "lucide-react"; // ícones
+import { Button } from "@/components/ui/button"; // botão padrão
+import { Input } from "@/components/ui/input"; // campo padrão
+import { Label } from "@/components/ui/label"; // rótulo padrão
+import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 
+// Entrada: id da empresa.
+// Saída: formulário de cadastro. Limpa o campo e atualiza a lista depois de salvar.
 export function EmployeeForm({ companyId }: { companyId: string }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition(); // true enquanto grava
   const [error, setError] = useState<string | null>(null);
 
+  // Valida o nome (2+ caracteres) e grava o profissional.
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
+    const form = event.currentTarget; // guarda o formulário para limpar depois
     const name = String(new FormData(form).get("name") ?? "").trim();
     setError(null);
     if (name.length < 2) return setError("Informe o nome da pessoa.");
