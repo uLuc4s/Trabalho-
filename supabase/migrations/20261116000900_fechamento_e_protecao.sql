@@ -1,8 +1,17 @@
-alter table public.appointments
-  add column payment_method text check (payment_method in ('pix', 'cartao', 'dinheiro')),
-  add column amount_paid numeric(10, 2) check (amount_paid >= 0),
-  add column paid_at timestamptz;
+-- FECHAMENTO DO ATENDIMENTO E PROTEÇÃO
+-- Objetivo: registrar como o atendimento terminou (concluído com pagamento ou falta),
+-- apagar os dados de um cliente quando ele pede (LGPD) e limitar tentativas de agendamento.
+-- Esta migration foi aplicada. O agendamento público aqui foi substituído pela migration 1100.
 
+-- Campos de pagamento no atendimento.
+alter table public.appointments
+  add column payment_method text check (payment_method in ('pix', 'cartao', 'dinheiro')), -- forma de pagamento
+  add column amount_paid numeric(10, 2) check (amount_paid >= 0), -- valor recebido, não negativo
+  add column paid_at timestamptz; -- quando o pagamento foi registrado
+
+-- Fecha o atendimento como concluído (com pagamento) ou como falta.
+-- Entrada: id, situação ('completed' ou 'no_show'), forma e valor (só para concluído).
+-- Saída: a situação gravada.
 create or replace function public.app_set_appointment_outcome(
   p_appointment_id uuid,
   p_status text,
@@ -15,7 +24,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_app public.appointments;
+  v_app public.appointments; -- atendimento encontrado
 begin
   if auth.uid() is null then
     raise exception 'não autenticado' using errcode = '28000';
@@ -30,6 +39,7 @@ begin
     raise exception 'sem permissão' using errcode = '42501';
   end if;
 
+  -- Só atendimento aberto pode ser fechado.
   if v_app.status not in ('confirmed', 'pending_confirmation') then
     raise exception 'agendamento já foi fechado' using errcode = 'P0001';
   end if;
@@ -38,6 +48,8 @@ begin
     raise exception 'situação inválida' using errcode = '22023';
   end if;
 
+  -- Concluído grava forma e valor. Falta limpa esses campos.
+  -- A data do pagamento só é preenchida se houver forma de pagamento.
   update public.appointments
   set status = p_status,
       payment_method = case when p_status = 'completed' then p_payment_method else null end,
@@ -49,6 +61,9 @@ begin
 end;
 $$;
 
+-- Apaga os dados pessoais de um cliente (LGPD), mantendo o histórico anonimizado.
+-- Entrada: id do cliente. Saída: 'anonymized'.
+-- Cancela os atendimentos futuros, troca nome e telefone por valores genéricos e apaga os endereços.
 create or replace function public.app_anonymize_customer(p_customer_id uuid)
 returns text
 language plpgsql
@@ -56,7 +71,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_customer public.customers;
+  v_customer public.customers; -- cliente a anonimizar
 begin
   if auth.uid() is null then
     raise exception 'não autenticado' using errcode = '28000';
@@ -67,26 +82,32 @@ begin
     raise exception 'cliente não encontrado' using errcode = 'P0002';
   end if;
 
+  -- Só dono e admin podem apagar dados de cliente.
   if not public.is_member_of(v_customer.company_id, array['owner', 'admin']) then
     raise exception 'sem permissão' using errcode = '42501';
   end if;
 
+  -- Cancela os atendimentos futuros ativos, para não haver visita de quem foi apagado.
   update public.appointments
   set status = 'cancelled'
   where customer_id = v_customer.id and starts_at > now() and status in ('pending_confirmation', 'confirmed');
 
+  -- Troca os dados pessoais por valores genéricos. O telefone novo começa com +0 e não é de ninguém.
   update public.customers
   set name = 'Cliente removido',
       phone = '+0' || lpad((floor(random() * 1000000000000))::bigint::text, 12, '0'),
       email = null
   where id = v_customer.id;
 
+  -- Apaga os endereços do cliente.
   delete from public.customer_addresses where customer_id = v_customer.id;
 
   return 'anonymized';
 end;
 $$;
 
+-- Agendamento público (versão intermediária, com limite de tentativas). Substituída pela migration 1100.
+-- Entradas e saídas iguais às da versão 0300.
 create or replace function public.public_create_booking(
   p_slug text,
   p_service_id uuid,
@@ -102,13 +123,13 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_company public.companies;
-  v_duration integer;
-  v_phone text := regexp_replace(coalesce(p_phone, ''), '\D', '', 'g');
-  v_customer_id uuid;
-  v_appointment_id uuid;
-  v_token text := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
-  v_ends_at timestamptz;
+  v_company public.companies; -- empresa
+  v_duration integer; -- duração do serviço
+  v_phone text := regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'); -- telefone só com dígitos
+  v_customer_id uuid; -- cliente
+  v_appointment_id uuid; -- agendamento criado
+  v_token text := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''); -- token de consulta
+  v_ends_at timestamptz; -- fim
 begin
   select * into v_company from public.companies where slug = p_slug and public_enabled;
   if not found then
@@ -199,6 +220,7 @@ begin
 end;
 $$;
 
+-- Permissões: fechamento e anonimização só para logados; ninguém anônimo.
 revoke execute on function public.app_set_appointment_outcome(uuid, text, text, numeric) from public, anon;
 revoke execute on function public.app_anonymize_customer(uuid) from public, anon;
 grant execute on function public.app_set_appointment_outcome(uuid, text, text, numeric) to authenticated;
