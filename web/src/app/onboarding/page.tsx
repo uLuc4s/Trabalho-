@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"; // redireciona no servidor
 import { AuthShell } from "@/components/auth/auth-shell"; // moldura das telas de acesso
 import { OnboardingForm } from "@/components/auth/onboarding-form"; // formulário de criar empresa
 import { createClient } from "@/lib/supabase/server"; // cliente do servidor com a sessão
+import { getActiveMembership } from "@/services/cadastro.service";
 
 // Monta a página do passo 1.
 // Depende da requisição (banco e sessão): bloqueia no servidor em vez de pré-renderizar.
@@ -12,12 +13,7 @@ export const instant = false;
 export default async function OnboardingPage() {
   const supabase = await createClient();
   // Procura um vínculo ativo: se já existe, não precisa criar empresa de novo.
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("id")
-    .eq("status", "active")
-    .limit(1)
-    .maybeSingle();
+  const { data: membership } = await getActiveMembership(supabase);
 
   if (membership) redirect("/app");
 

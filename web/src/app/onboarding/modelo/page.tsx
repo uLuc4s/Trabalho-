@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation"; // redireciona no servidor
 import { ModelPicker } from "@/components/onboarding/model-picker"; // seletor de modelo e ramo
 import { getCurrentCompany } from "@/lib/company"; // empresa e papel do usuário logado
+import { countCompanyServices } from "@/services/cadastro.service";
 
 // Monta a página do passo 2.
 // Depende da requisição (banco e sessão): bloqueia no servidor em vez de pré-renderizar.
@@ -14,10 +15,7 @@ export default async function ModeloPage() {
   if (company.business_model) redirect("/app");
 
   // Conta os serviços da empresa. Se já houver, o seletor não cria exemplos.
-  const { count } = await supabase
-    .from("services")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", company.id);
+  const { count } = await countCompanyServices(supabase, company.id);
 
   return (
     <main className="min-h-screen bg-background px-6 py-16 md:px-12">
