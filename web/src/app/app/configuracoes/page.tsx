@@ -1,7 +1,7 @@
 // Página de configurações: dados da empresa que aparecem para o cliente e regras de atendimento.
 // A consulta fica em services.
 
-import { CompanySettingsForm } from "@/components/app/company-settings-form";
+import { CompanySettingsForm } from "@/components/app/forms/company-settings-form";
 import { getCurrentCompany } from "@/lib/company";
 import { getCompanySettings } from "@/services/configuracoes.service";
 

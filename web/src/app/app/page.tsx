@@ -3,7 +3,7 @@
 // As consultas rodam em paralelo (Promise.all) para a página abrir mais rápido.
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, ClipboardList, Inbox, Users, Wallet } from "lucide-react"; // ícones
-import { BarChart, Donut, type Point } from "@/components/app/charts"; // gráficos
+import { BarChart, Donut, type Point } from "@/components/app/charts/charts"; // gráficos
 import { CountUp } from "@/components/motion/count-up"; // número que sobe animado
 import { formatTime, getCurrentCompany, todayInSaoPaulo, dayRange } from "@/lib/company";
 

@@ -1,7 +1,7 @@
 // Página de solicitações: pedidos de orçamento ou visita que aguardam decisão, e os já decididos.
 // A consulta fica em services, a separação em mappers e os tipos nos próprios services.
 
-import { ReviewRequest } from "@/components/app/review-request";
+import { ReviewRequest } from "@/components/app/actions/review-request";
 import { formatDateTime, getCurrentCompany } from "@/lib/company";
 import { getServiceRequests } from "@/services/solicitacoes.service";
 import { splitRequests } from "@/mappers/solicitacoes.mapper";

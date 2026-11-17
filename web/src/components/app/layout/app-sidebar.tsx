@@ -23,7 +23,7 @@ import {
   UserRound,
 } from "lucide-react"; // ícones dos itens
 import { createClient } from "@/lib/supabase/client"; // cliente do navegador, para sair
-import { MobileNav } from "@/components/app/mobile-nav"; // menu do celular
+import { MobileNav } from "@/components/app/layout/mobile-nav"; // menu do celular
 import { cn } from "@/lib/utils"; // junta classes CSS
 
 // Todos os itens do painel, na ordem em que aparecem.

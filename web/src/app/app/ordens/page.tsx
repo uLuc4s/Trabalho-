@@ -2,7 +2,7 @@ import Link from "next/link";
 // Página de ordens de serviço: lista, veículo, status, ações e histórico de cada ordem.
 // A consulta fica em services, as regras em mappers e os tipos em dto.
 
-import { WorkOrderActions } from "@/components/app/work-order-actions";
+import { WorkOrderActions } from "@/components/app/actions/work-order-actions";
 import { formatDateTime, getCurrentCompany } from "@/lib/company";
 import { getLinkedAppointments, getWorkOrderEvents, getWorkOrders } from "@/services/ordens.service";
 import { buildVehicleByOrder, describeEvent, groupEventsByOrder, STATUS_LABEL } from "@/mappers/ordens.mapper";

@@ -5,7 +5,7 @@
 import { getCurrentCompany, todayInSaoPaulo, formatDateTime } from "@/lib/company";
 import { getMonthAppointments } from "@/services/relatorios.service";
 import { buildReport, formatBRL, PAYMENT_LABEL } from "@/mappers/relatorios.mapper";
-import { PrintButton } from "@/components/app/print-button";
+import { PrintButton } from "@/components/app/actions/print-button";
 
 // Monta o relatório do mês atual.
 export default async function RelatorioImprimirPage() {

@@ -1,38 +1,20 @@
 // Página de equipe: cadastra quem atende, define serviços e horários de cada um, convida pessoas e lista quem tem acesso ao painel.
 // Só dono e admin alteram; os outros papéis veem a lista.
-import { EmployeeForm } from "@/components/app/employee-form"; // cadastro de profissional
-import { EmployeeSetup } from "@/components/app/employee-setup"; // serviços e horários de cada profissional
-import { InviteForm } from "@/components/app/invite-form"; // gera convite para o painel
+import { EmployeeForm } from "@/components/app/forms/employee-form"; // cadastro de profissional
+import { EmployeeSetup } from "@/components/app/equipe/employee-setup"; // serviços e horários de cada profissional
+import { InviteForm } from "@/components/app/forms/invite-form"; // gera convite para o painel
 import { getCurrentCompany } from "@/lib/company";
+import { getEquipeData } from "@/services/equipe.service";
 
 // Monta a página de equipe.
 export default async function EquipePage() {
   const { supabase, company, role } = await getCurrentCompany();
   const canManage = role === "owner" || role === "admin"; // só dono e admin alteram
 
-  // Oito consultas em paralelo: profissionais, membros, convites pendentes, serviços, ligações, horários.
-  const [{ data: employees }, { data: members }, { data: invites }, { data: services }, { data: links }, { data: hours }] =
-    await Promise.all([
-      supabase.from("employees").select("id, display_name, active").order("display_name"),
-      // Nome dos membros vem da tabela de perfis. Ver a observação no fim do arquivo.
-      supabase.from("company_members").select("id, role, status").order("created_at"),
-      // Convites ainda não aceitos e dentro do prazo.
-      supabase
-        .from("invitations")
-        .select("id, email, role, expires_at, accepted_at")
-        .is("accepted_at", null)
-        .gt("expires_at", new Date().toISOString())
-        .order("expires_at"),
-      supabase.from("services").select("id, name").eq("active", true).order("name"),
-      supabase.from("employee_services").select("employee_id, service_id"),
-      supabase.from("working_hours").select("id, employee_id, weekday, start_time, end_time").order("weekday"),
-    ]);
-
+  // Todas as consultas da tela vêm do service de equipe.
+  const { employees, members, invites, services, links, hours, nameRows } = await getEquipeData(supabase, company.id);
   // Texto de cada papel na lista de acessos.
   const roleLabel: Record<string, string> = { owner: "Dono", admin: "Administrador", member: "Equipe", viewer: "Leitura" };
-  // Nomes dos membros pela função do banco (a leitura direta de perfis só traz o próprio).
-  const { data: nameData } = await supabase.rpc("app_company_member_names", { p_company: company.id });
-  const nameRows = (nameData ?? []) as { member_id: string; full_name: string }[];
   const nameById = new Map<string, string>(nameRows.map((r) => [r.member_id, r.full_name]));
 
   return (

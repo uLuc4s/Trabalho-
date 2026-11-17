@@ -1,6 +1,6 @@
 // Layout do painel: confere se a empresa já escolheu o modelo e monta o menu lateral ao lado do conteúdo.
 // Todas as páginas em /app passam por aqui.
-import { AppSidebar } from "@/components/app/app-sidebar"; // menu lateral e menu do celular
+import { AppSidebar } from "@/components/app/layout/app-sidebar"; // menu lateral e menu do celular
 import { redirect } from "next/navigation"; // redireciona para outra rota no servidor
 import { getCurrentCompany } from "@/lib/company"; // descobre a empresa e o papel do usuário logado
 import { ToastProvider } from "@/components/ui/toast"; // avisos de sucesso e erro

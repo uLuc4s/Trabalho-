@@ -2,7 +2,7 @@
 // A consulta fica em services, as contas em mappers e os tipos em dto.
 
 import Link from "next/link";
-import { BarChart } from "@/components/app/charts";
+import { BarChart } from "@/components/app/charts/charts";
 import { getCurrentCompany, todayInSaoPaulo } from "@/lib/company";
 import { getMonthAppointments } from "@/services/relatorios.service";
 import { buildReport, formatBRL } from "@/mappers/relatorios.mapper";

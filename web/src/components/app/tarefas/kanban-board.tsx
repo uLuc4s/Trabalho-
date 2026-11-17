@@ -7,7 +7,7 @@ import { useState, useTransition } from "react"; // estado e transição de carr
 import { Loader2, Plus, Trash2 } from "lucide-react"; // ícones
 import { createClient } from "@/lib/supabase/client"; // cliente do navegador
 import { cn } from "@/lib/utils"; // junta classes CSS
-import { TaskChecklist, type ChecklistItem } from "@/components/app/task-checklist"; // checklist de cada card
+import { TaskChecklist, type ChecklistItem } from "@/components/app/tarefas/task-checklist"; // checklist de cada card
 
 // Formato de uma coluna.
 export type Column = { id: string; name: string; position: number };

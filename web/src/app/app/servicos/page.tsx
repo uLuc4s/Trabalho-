@@ -1,7 +1,7 @@
 // Página de serviços: formulário para cadastrar e lista dos serviços da empresa.
 // A consulta fica em services.
 
-import { ServiceForm } from "@/components/app/service-form";
+import { ServiceForm } from "@/components/app/forms/service-form";
 import { getCurrentCompany } from "@/lib/company";
 import { getServices } from "@/services/servicos.service";
 import { formatMoney } from "@/mappers/agenda.mapper";

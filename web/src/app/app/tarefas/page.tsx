@@ -1,7 +1,7 @@
 // Página de tarefas: quadro Kanban com colunas, tarefas e checklist.
 // As consultas ficam em services e a junção de checklist em mappers.
 
-import { KanbanBoard, type Column } from "@/components/app/kanban-board";
+import { KanbanBoard, type Column } from "@/components/app/tarefas/kanban-board";
 import { getCurrentCompany } from "@/lib/company";
 import { getBoardContent, getFirstBoard } from "@/services/tarefas.service";
 import { attachChecklist } from "@/mappers/tarefas.mapper";

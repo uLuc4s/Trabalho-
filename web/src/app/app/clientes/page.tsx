@@ -4,8 +4,8 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Search } from "lucide-react";
-import { ForgetCustomer } from "@/components/app/forget-customer";
-import { EditCustomer } from "@/components/app/edit-customer";
+import { ForgetCustomer } from "@/components/app/actions/forget-customer";
+import { EditCustomer } from "@/components/app/forms/edit-customer";
 import { daysAgoMs, formatDateTime, getCurrentCompany } from "@/lib/company";
 import { getCustomerAppointments, getCustomers } from "@/services/clientes.service";
 import { buildCustomerStats, filterCustomers, isInactive } from "@/mappers/clientes.mapper";
