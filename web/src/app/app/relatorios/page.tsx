@@ -31,9 +31,14 @@ export default async function RelatoriosPage() {
       <header>
         <h1 className="font-display text-5xl tracking-tight">Relatórios</h1>
         <p className="mt-2 text-sm text-muted-foreground">Mês atual. {report.pending} atendimentos ainda aguardam fechamento.</p>
-        <Link href="/app/exportar/atendimentos" className="mt-4 inline-block rounded-full border border-border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary">
-          Exportar atendimentos do mês
-        </Link>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/app/relatorios/imprimir" className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90">
+            Gerar PDF do mês
+          </Link>
+          <Link href="/app/exportar/atendimentos" className="rounded-full border border-border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary">
+            Exportar CSV do mês
+          </Link>
+        </div>
       </header>
 
       {/* Aviso se a consulta falhar, em vez de mostrar zeros como se fossem reais. */}
