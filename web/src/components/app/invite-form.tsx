@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"; // botão padrão
 import { Input } from "@/components/ui/input"; // campo padrão
 import { Label } from "@/components/ui/label"; // rótulo padrão
 import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { useToast } from "@/components/ui/toast"; // aviso de sucesso ou erro
 
 // Calcula o SHA-256 de um texto e devolve em hexadecimal.
 // Entrada: texto. Saída: 64 caracteres hexadecimais. O banco guarda este valor, nunca o texto original.
@@ -31,6 +32,7 @@ export function InviteForm({ companyId }: { companyId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [link, setLink] = useState<string | null>(null); // link gerado, para mostrar e copiar
   const [copied, setCopied] = useState(false);
+  const { notify } = useToast();
 
   // Gera o convite: valida o e-mail, cria o token, guarda o hash e monta o link.
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -68,6 +70,7 @@ export function InviteForm({ companyId }: { companyId: string }) {
       }
 
       setLink(`${window.location.origin}/convite?token=${token}`);
+      notify("Convite gerado. Copie o link e envie.");
     });
   }
 

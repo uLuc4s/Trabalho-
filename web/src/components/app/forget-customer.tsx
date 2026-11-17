@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"; // para atualizar a tela depois de 
 import { useState, useTransition } from "react"; // estado e transição de carregamento
 import { Loader2, Trash2 } from "lucide-react"; // ícones
 import { createClient } from "@/lib/supabase/client"; // cliente do navegador
+import { useToast } from "@/components/ui/toast"; // aviso de sucesso ou erro
 
 // Entrada: id do cliente.
 // Saída: botão "Apagar dados". Ao clicar, aparece a confirmação com aviso de que não dá para desfazer.
@@ -14,6 +15,7 @@ export function ForgetCustomer({ customerId }: { customerId: string }) {
   const [confirming, setConfirming] = useState(false); // true quando a confirmação está aberta
   const [pending, startTransition] = useTransition(); // true enquanto apaga
   const [error, setError] = useState<string | null>(null);
+  const { notify } = useToast();
 
   // Chama a função do banco que anonimiza o cliente e cancela os horários futuros.
   function forget() {
@@ -24,6 +26,7 @@ export function ForgetCustomer({ customerId }: { customerId: string }) {
         setError(rpcError.message);
         return;
       }
+      notify("Dados do cliente apagados");
       router.refresh(); // o cliente aparece como "Cliente removido"
     });
   }

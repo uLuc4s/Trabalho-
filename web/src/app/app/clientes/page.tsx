@@ -5,6 +5,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Search } from "lucide-react";
 import { ForgetCustomer } from "@/components/app/forget-customer";
+import { EditCustomer } from "@/components/app/edit-customer";
 import { daysAgoMs, formatDateTime, getCurrentCompany } from "@/lib/company";
 import { getCustomerAppointments, getCustomers } from "@/services/clientes.service";
 import { buildCustomerStats, filterCustomers, isInactive } from "@/mappers/clientes.mapper";
@@ -22,6 +23,7 @@ export default async function ClientesPage({
   const onlyInactive = sem_retorno === "1"; // filtro ligado só com o valor "1"
   const { supabase, role } = await getCurrentCompany();
   const canManage = role === "owner" || role === "admin"; // só dono e admin podem apagar dados
+  const canEdit = role !== "viewer"; // leitor só consulta
 
   // Busca clientes e atendimentos em paralelo.
   const [{ data: customers, error: customersError }, { data: appointments, error: appointmentsError }] = await Promise.all([
@@ -112,6 +114,7 @@ export default async function ClientesPage({
                   <Link href={`/app/agenda?data=${s?.last ? s.last.slice(0, 10) : ""}`} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                     Ver agenda
                   </Link>
+                  {canEdit && <EditCustomer customerId={c.id} name={c.name} phone={c.phone} />}
                   {canManage && <ForgetCustomer customerId={c.id} />}
                 </div>
               </li>
