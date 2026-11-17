@@ -110,6 +110,9 @@ export default async function ClientesPage({
                   </p>
                 </div>
                 <div className="flex items-center gap-3 md:justify-end">
+                  <Link href={`/app/clientes/${c.id}`} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    Histórico
+                  </Link>
                   {/* Leva para a agenda do dia do último atendimento. */}
                   <Link href={`/app/agenda?data=${s?.last ? s.last.slice(0, 10) : ""}`} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                     Ver agenda
