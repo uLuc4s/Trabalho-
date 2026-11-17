@@ -15,7 +15,7 @@ const segments = [
   {
     icon: Stethoscope,
     name: "Clínicas",
-    text: "Agenda por profissional, bloqueio de horário e lista do dia para a recepção.",
+    text: "Agenda por profissional, lista do dia para a recepção e sigilo: a agenda não mostra o serviço nem o telefone.",
   },
   {
     icon: Wrench,

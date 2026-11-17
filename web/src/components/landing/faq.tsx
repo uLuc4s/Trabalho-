@@ -21,6 +21,22 @@ const questions = [
     q: "Os dados de cada empresa ficam separados?",
     a: "Sim. Cada empresa acessa somente os próprios dados, e isso é garantido pelo banco.",
   },
+  {
+    q: "Preciso instalar alguma coisa?",
+    a: "Não. O painel funciona no navegador, e a página de agendamento é um link que você compartilha.",
+  },
+  {
+    q: "O cliente pode cancelar ou remarcar sozinho?",
+    a: "Pode, pelo mesmo link que recebeu na confirmação. Você define até quantas horas antes isso é permitido.",
+  },
+  {
+    q: "Consigo exportar meus dados?",
+    a: "Sim. Clientes e atendimentos saem em planilha (CSV), e o relatório do mês sai em PDF.",
+  },
+  {
+    q: "Como fica a exclusão de dados de um cliente?",
+    a: "Quem administra pode apagar os dados de um cliente. Os horários futuros são cancelados e os dados pessoais saem do sistema.",
+  },
 ];
 
 // Monta a seção. Não recebe nada.

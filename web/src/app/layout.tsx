@@ -20,9 +20,27 @@ const body = Inter({
 });
 
 // Título e descrição que aparecem na aba do navegador e nos buscadores.
+const SITE_URL = "https://agendfix.vercel.app";
+const TITLE = "Agendfix | Agenda online para o seu negócio";
+const DESCRIPTION = "Seus clientes agendam pelo seu link, sem criar conta. Agenda, equipe, ordens de serviço e relatórios em um só lugar.";
+
+// Título, descrição e prévia de compartilhamento (WhatsApp, Google e redes sociais).
 export const metadata: Metadata = {
-  title: "Agendfix | Agenda online para o seu negócio",
-  description: "Agendamentos, equipe e operação em um só lugar.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  applicationName: "Agendfix",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Agendfix",
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: { card: "summary", title: TITLE, description: DESCRIPTION },
+  robots: { index: true, follow: true },
 };
 
 // Entrada: a página atual (children).
