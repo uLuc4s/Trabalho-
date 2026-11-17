@@ -5,6 +5,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CancelAppointment } from "@/components/app/cancel-appointment";
+import { RescheduleAppointment } from "@/components/app/reschedule-appointment";
 import { OutcomeActions } from "@/components/app/outcome-actions";
 import { MonthCalendar } from "@/components/app/month-calendar";
 import { cn } from "@/lib/utils";
@@ -62,7 +63,8 @@ async function AgendaContent({
   // Mês da URL no formato AAAA-MM, ou o mês atual.
   const [year, month] = mes && /^\d{4}-\d{2}$/.test(mes) ? mes.split("-").map(Number) : today.split("-").slice(0, 2).map(Number);
 
-  const { supabase, company } = await getCurrentCompany();
+  const { supabase, company, role } = await getCurrentCompany();
+  const canEdit = role !== "viewer"; // leitor só consulta a agenda
   // Em advocacia e clínica, a agenda não mostra o serviço nem o telefone (sigilo).
   const sensitive = company.segment === "advocacia" || company.segment === "clinica";
   const range = dayRange(date); // início e fim do dia
@@ -183,6 +185,12 @@ async function AgendaContent({
                     {(row.status === "confirmed" || row.status === "pending_confirmation") && (
                       <div className="flex flex-col gap-2 md:items-end">
                         <OutcomeActions appointmentId={row.id} defaultAmount={service?.price ?? null} />
+                        {canEdit && (
+                          <RescheduleAppointment
+                            appointmentId={row.id}
+                            startsAtLocal={new Date(row.starts_at).toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" }).slice(0, 16).replace(" ", "T")}
+                          />
+                        )}
                         <CancelAppointment appointmentId={row.id} />
                       </div>
                     )}

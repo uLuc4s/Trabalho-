@@ -13,6 +13,7 @@ const MIGRATIONS = [
   "../migrations/20261116000100_revoga_anon.sql",
   "../migrations/20261116000200_operacoes.sql",
   "../migrations/20261116001600_fecha_escrita_direta.sql",
+  "../migrations/20261116001900_remarcar_pelo_painel.sql",
 ].map((p) => readFileSync(new URL(p, import.meta.url), "utf8"));
 
 const db = new PGlite({ extensions: { btree_gist } }); // banco de teste novo
@@ -174,6 +175,24 @@ check("solicitação entra com status 'new'", !sr.error && sr.rows[0].status ===
 // Membro comum não lê a fila de envio (só dono e admin).
 const notifRead = await as("member1", "select id from public.notifications");
 check("member não lê fila de notificações", notifRead.rows.length === 0, `rows=${notifRead.rows.length}`);
+
+// --- Remarcação pelo painel ---
+const apRow = await as("member1", "select id from public.appointments where company_id = $1 and starts_at = '2026-12-03 09:00-03'", [COMP1]);
+const AP_ID = apRow.rows[0]?.id;
+const moveOk = await as("member1", "select public.app_reschedule_appointment($1, '2026-12-03 13:00-03') as r", [AP_ID]);
+check("membro remarca atendimento para horário livre", !moveOk.error && !!moveOk.rows[0]?.r?.starts_at, moveOk.error?.message);
+
+// O atendimento agora ocupa 13:00-15:00. Ocupa 15:30-16:00 com outro cliente e tenta remarcar para 15:15 (serviço de 2h, sobrepõe 15:30).
+const busy = await as("member1", "insert into public.appointments (company_id, employee_id, service_id, customer_id, starts_at, ends_at) values ($1,$2,$3,$4,'2026-12-03 15:30-03','2026-12-03 16:00-03') returning id", [COMP1, emp, svc, cust]);
+if (busy.error) throw new Error("preparação do teste falhou: " + busy.error.message);
+const moveBusy = await as("member1", "select public.app_reschedule_appointment($1, '2026-12-03 15:15-03') as r", [AP_ID]);
+check("remarcar sobre outro atendimento do profissional é recusado", moveBusy.error !== null, moveBusy.error?.message ?? "aceito (falha)");
+
+const moveViewer = await as("viewer1", "select public.app_reschedule_appointment($1, '2026-12-03 18:00-03') as r", [AP_ID]);
+check("leitor não remarca atendimento", moveViewer.error !== null, moveViewer.error?.message ?? "remarcou (falha)");
+
+const moveOutsider = await as("owner2", "select public.app_reschedule_appointment($1, '2026-12-03 16:00-03') as r", [AP_ID]);
+check("empresa de outro dono não remarca atendimento alheio", moveOutsider.error !== null, moveOutsider.error?.message ?? "remarcou (falha)");
 
 // Resumo final.
 const failed = results.filter((r) => !r.ok).length;
