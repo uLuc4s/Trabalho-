@@ -6,6 +6,7 @@ import { ArrowUpRight, CalendarDays, ClipboardList, Inbox, Users, Wallet } from 
 import { BarChart, Donut, type Point } from "@/components/app/charts/charts"; // gráficos
 import { CountUp } from "@/components/motion/count-up"; // número que sobe animado
 import { formatTime, getCurrentCompany, todayInSaoPaulo, dayRange } from "@/lib/company";
+import { getHomeData } from "@/services/visao-geral.service";
 
 // Relação do Supabase: objeto ou lista.
 type Pick<T> = T | T[] | null;
@@ -33,24 +34,9 @@ export default async function AppHomePage() {
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
 
   // Oito consultas em paralelo. Cada uma traz só o necessário para o indicador.
-  const [todayRes, pendingRes, orderRows, windowRes, monthRes, nextRes, customersRes, activeRows] = await Promise.all([
-    // Atendimentos de hoje, sem contar cancelados. Só a contagem, sem trazer as linhas.
-    supabase.from("appointments").select("id", { count: "exact", head: true }).gte("starts_at", day.start).lte("starts_at", day.end).neq("status", "cancelled"),
-    // Solicitações ainda sem resposta (contagem).
-    supabase.from("service_requests").select("id", { count: "exact", head: true }).in("status", ["new", "under_review"]),
-    // Status de todas as ordens, para o gráfico de rosca.
-    supabase.from("work_orders").select("status"),
-    // Atendimentos da janela do gráfico (14 dias atrás até 7 à frente).
-    supabase.from("appointments").select("starts_at, status, services(price, name), customers(name)").gte("starts_at", from).lte("starts_at", to).neq("status", "cancelled"),
-    // Atendimentos do mês, para a receita prevista.
-    supabase.from("appointments").select("starts_at, services(price)").gte("starts_at", monthStart).neq("status", "cancelled"),
-    // Próximos 6 atendimentos a partir de agora.
-    supabase.from("appointments").select("id, starts_at, services(name), customers(name)").gte("starts_at", now.toISOString()).neq("status", "cancelled").order("starts_at").limit(6),
-    // Total de clientes cadastrados (contagem).
-    supabase.from("customers").select("id", { count: "exact", head: true }),
-    // Clientes com atendimento nos últimos 30 dias, para achar quem sumiu.
-    supabase.from("appointments").select("customer_id").gte("starts_at", thirtyDaysAgo).neq("status", "cancelled"),
-  ]);
+  const [todayRes, pendingRes, orderRows, windowRes, monthRes, nextRes, customersRes, activeRows] = await getHomeData(supabase, {
+    day, from, to, monthStart, now: now.toISOString(), thirtyDaysAgo,
+  });
 
   // Atendimentos por dia: começa com zero em cada dia da janela e soma os atendimentos encontrados.
   const counts = new Map<string, number>();
